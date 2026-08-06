@@ -126,6 +126,39 @@ class UserDAO extends BaseDAO
         }
     }
 
+    // Tìm kiếm người dùng
+    public function search(string $keyword): array
+    {
+        $list = [];
+        try {
+            $sql = "SELECT id, fullname, username, password, email, phone, address, role, status, created_at, updated_at FROM users WHERE fullname LIKE ? OR username LIKE ? OR email LIKE ? ORDER BY id DESC";
+            $stmt = $this->prepare($sql);
+            $kw = "%$keyword%";
+            $stmt->bind_param("sss", $kw, $kw, $kw);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $u = new User(
+                    $row["fullname"],
+                    $row["username"],
+                    $row["password"],
+                    $row["email"],
+                    $row["phone"],
+                    $row["address"],
+                    (int)$row["role"],
+                    (int)$row["status"]
+                );
+                $u->id = (int)$row["id"];
+                $u->createdAt = $row["created_at"] ?? '';
+                $u->updatedAt = $row["updated_at"] ?? '';
+                $list[] = $u;
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return $list;
+    }
+
     public function countAll(): int
     {
         $res = $this->executeQuery("SELECT COUNT(*) AS total FROM users");

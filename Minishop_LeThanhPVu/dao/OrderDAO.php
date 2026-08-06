@@ -144,4 +144,90 @@ class OrderDAO extends BaseDAO
         }
         return $list;
     }
+
+    // Lấy danh sách đơn hàng kèm tên khách hàng + nhân viên (JOIN), có tìm kiếm
+    public function getAllWithJoin(string $keyword = ''): array
+    {
+        $list = [];
+        try {
+            $sql = "SELECT o.*, c.fullname AS customer_name, u.fullname AS user_name 
+                    FROM orders o 
+                    LEFT JOIN customers c ON o.customer_id = c.id 
+                    LEFT JOIN users u ON o.user_id = u.id";
+            if ($keyword !== '') {
+                $sql .= " WHERE o.order_code LIKE ? OR c.fullname LIKE ?";
+            }
+            $sql .= " ORDER BY o.id DESC";
+            $stmt = $this->prepare($sql);
+            if ($keyword !== '') {
+                $kw = "%$keyword%";
+                $stmt->bind_param("ss", $kw, $kw);
+            }
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $list[] = $row;
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return $list;
+    }
+
+    // Lấy 1 đơn hàng kèm tên khách hàng + nhân viên
+    public function findByIdWithJoin(int $id): ?array
+    {
+        try {
+            $sql = "SELECT o.*, c.fullname AS customer_name, c.phone AS customer_phone, c.address AS customer_address, u.fullname AS user_name 
+                    FROM orders o 
+                    LEFT JOIN customers c ON o.customer_id = c.id 
+                    LEFT JOIN users u ON o.user_id = u.id 
+                    WHERE o.id = ?";
+            $stmt = $this->prepare($sql);
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                return $row;
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return null;
+    }
+
+    // Lấy chi tiết sản phẩm trong đơn hàng (Master-Detail)
+    public function getOrderDetails(int $orderId): array
+    {
+        $list = [];
+        try {
+            $sql = "SELECT od.*, p.proname, p.image 
+                    FROM order_details od 
+                    INNER JOIN products p ON od.product_id = p.id 
+                    WHERE od.order_id = ?";
+            $stmt = $this->prepare($sql);
+            $stmt->bind_param("i", $orderId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $list[] = $row;
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return $list;
+    }
+
+    // Cập nhật trạng thái đơn hàng
+    public function updateStatus(int $id, int $status): bool
+    {
+        try {
+            $sql = "UPDATE orders SET status=? WHERE id=?";
+            $stmt = $this->prepare($sql);
+            $stmt->bind_param("ii", $status, $id);
+            return $stmt->execute();
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
 }

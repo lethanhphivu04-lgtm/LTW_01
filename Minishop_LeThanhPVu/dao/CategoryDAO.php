@@ -9,27 +9,35 @@ class CategoryDAO extends BaseDAO
         parent::__construct();
     }
 
-    // Lấy tất cả danh mục
-    public function getAll(): array
+    // Lấy tất cả danh mục (có hỗ trợ tìm kiếm theo từ khóa)
+    public function getAll(string $keyword = ''): array
     {
         $list = [];
         try {
-            $sql = "SELECT id, catename, slug, image, description, status, created_at, updated_at FROM categories ORDER BY id DESC";
-            $result = $this->executeQuery($sql);
-            if ($result) {
-                while ($row = $result->fetch_assoc()) {
-                    $category = new Category(
-                        $row["catename"],
-                        $row["slug"],
-                        $row["image"],
-                        $row["description"],
-                        (int)$row["status"]
-                    );
-                    $category->id = (int)$row["id"];
-                    $category->createdAt = $row["created_at"] ?? '';
-                    $category->updatedAt = $row["updated_at"] ?? '';
-                    $list[] = $category;
-                }
+            $sql = "SELECT id, catename, slug, image, description, status, created_at, updated_at FROM categories";
+            if ($keyword !== '') {
+                $sql .= " WHERE catename LIKE ? OR slug LIKE ?";
+            }
+            $sql .= " ORDER BY id DESC";
+            $stmt = $this->prepare($sql);
+            if ($keyword !== '') {
+                $kw = "%$keyword%";
+                $stmt->bind_param("ss", $kw, $kw);
+            }
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $category = new Category(
+                    $row["catename"],
+                    $row["slug"],
+                    $row["image"],
+                    $row["description"],
+                    (int)$row["status"]
+                );
+                $category->id = (int)$row["id"];
+                $category->createdAt = $row["created_at"] ?? '';
+                $category->updatedAt = $row["updated_at"] ?? '';
+                $list[] = $category;
             }
         } catch (Exception $e) {
             throw $e;

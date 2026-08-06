@@ -114,6 +114,36 @@ class BrandDAO extends BaseDAO
         }
     }
 
+    // Tìm kiếm thương hiệu
+    public function search(string $keyword): array
+    {
+        $list = [];
+        try {
+            $sql = "SELECT id, brandname, slug, image, description, status, created_at, updated_at FROM brands WHERE brandname LIKE ? OR slug LIKE ? ORDER BY id DESC";
+            $stmt = $this->prepare($sql);
+            $kw = "%$keyword%";
+            $stmt->bind_param("ss", $kw, $kw);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $brand = new Brand(
+                    $row["brandname"],
+                    $row["slug"],
+                    $row["image"],
+                    $row["description"],
+                    (int)$row["status"]
+                );
+                $brand->id = (int)$row["id"];
+                $brand->createdAt = $row["created_at"] ?? '';
+                $brand->updatedAt = $row["updated_at"] ?? '';
+                $list[] = $brand;
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return $list;
+    }
+
     public function countAll(): int
     {
         $res = $this->executeQuery("SELECT COUNT(*) AS total FROM brands");

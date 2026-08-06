@@ -134,6 +134,57 @@ class ProductDAO extends BaseDAO
         }
     }
 
+    // Lấy danh sách sản phẩm kèm tên danh mục + thương hiệu (JOIN), có tìm kiếm
+    public function getAllWithJoin(string $keyword = ''): array
+    {
+        $list = [];
+        try {
+            $sql = "SELECT p.*, c.catename, b.brandname 
+                    FROM products p 
+                    INNER JOIN categories c ON p.category_id = c.id 
+                    INNER JOIN brands b ON p.brand_id = b.id";
+            if ($keyword !== '') {
+                $sql .= " WHERE p.proname LIKE ? OR c.catename LIKE ? OR b.brandname LIKE ?";
+            }
+            $sql .= " ORDER BY p.id DESC";
+            $stmt = $this->prepare($sql);
+            if ($keyword !== '') {
+                $kw = "%$keyword%";
+                $stmt->bind_param("sss", $kw, $kw, $kw);
+            }
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $list[] = $row;
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return $list;
+    }
+
+    // Lấy 1 sản phẩm kèm tên danh mục + thương hiệu
+    public function findByIdWithJoin(int $id): ?array
+    {
+        try {
+            $sql = "SELECT p.*, c.catename, b.brandname 
+                    FROM products p 
+                    INNER JOIN categories c ON p.category_id = c.id 
+                    INNER JOIN brands b ON p.brand_id = b.id 
+                    WHERE p.id = ?";
+            $stmt = $this->prepare($sql);
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                return $row;
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return null;
+    }
+
     public function countAll(): int
     {
         $res = $this->executeQuery("SELECT COUNT(*) AS total FROM products");

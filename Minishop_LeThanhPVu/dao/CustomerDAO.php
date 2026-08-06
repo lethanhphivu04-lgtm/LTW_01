@@ -118,6 +118,37 @@ class CustomerDAO extends BaseDAO
         }
     }
 
+    // Tìm kiếm khách hàng
+    public function search(string $keyword): array
+    {
+        $list = [];
+        try {
+            $sql = "SELECT id, fullname, phone, email, address, note, status, created_at, updated_at FROM customers WHERE fullname LIKE ? OR phone LIKE ? OR email LIKE ? ORDER BY id DESC";
+            $stmt = $this->prepare($sql);
+            $kw = "%$keyword%";
+            $stmt->bind_param("sss", $kw, $kw, $kw);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $c = new Customer(
+                    $row["fullname"],
+                    $row["phone"],
+                    $row["email"],
+                    $row["address"],
+                    $row["note"],
+                    (int)$row["status"]
+                );
+                $c->id = (int)$row["id"];
+                $c->createdAt = $row["created_at"] ?? '';
+                $c->updatedAt = $row["updated_at"] ?? '';
+                $list[] = $c;
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return $list;
+    }
+
     public function countAll(): int
     {
         $res = $this->executeQuery("SELECT COUNT(*) AS total FROM customers");
