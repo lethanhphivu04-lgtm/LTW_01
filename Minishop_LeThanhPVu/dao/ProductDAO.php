@@ -124,12 +124,27 @@ class ProductDAO extends BaseDAO
 
     public function delete(int $id): bool
     {
+        $this->beginTransaction();
         try {
-            $sql = "DELETE FROM products WHERE id=?";
-            $stmt = $this->prepare($sql);
-            $stmt->bind_param("i", $id);
-            return $stmt->execute();
+            // 1. Xóa hình ảnh sản phẩm (product_images)
+            $stmt1 = $this->prepare("DELETE FROM product_images WHERE product_id = ?");
+            $stmt1->bind_param("i", $id);
+            $stmt1->execute();
+
+            // 2. Xóa các chi tiết đơn hàng chứa sản phẩm này (order_details)
+            $stmt2 = $this->prepare("DELETE FROM order_details WHERE product_id = ?");
+            $stmt2->bind_param("i", $id);
+            $stmt2->execute();
+
+            // 3. Xóa sản phẩm
+            $stmt3 = $this->prepare("DELETE FROM products WHERE id = ?");
+            $stmt3->bind_param("i", $id);
+            $res = $stmt3->execute();
+
+            $this->commit();
+            return $res;
         } catch (Exception $e) {
+            $this->rollback();
             throw $e;
         }
     }

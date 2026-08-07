@@ -114,15 +114,34 @@ class CategoryDAO extends BaseDAO
         }
     }
 
-    // Xóa danh mục
+    // Xóa danh mục (xóa con trước rồi xóa cha)
     public function delete(int $id): bool
     {
+        $this->beginTransaction();
         try {
-            $sql = "DELETE FROM categories WHERE id=?";
-            $stmt = $this->prepare($sql);
-            $stmt->bind_param("i", $id);
-            return $stmt->execute();
+            // 1. Xóa hình ảnh & chi tiết đơn hàng của các sản phẩm thuộc danh mục này
+            $stmt1 = $this->prepare("DELETE FROM product_images WHERE product_id IN (SELECT id FROM products WHERE category_id = ?)");
+            $stmt1->bind_param("i", $id);
+            $stmt1->execute();
+
+            $stmt2 = $this->prepare("DELETE FROM order_details WHERE product_id IN (SELECT id FROM products WHERE category_id = ?)");
+            $stmt2->bind_param("i", $id);
+            $stmt2->execute();
+
+            // 2. Xóa các sản phẩm thuộc danh mục
+            $stmt3 = $this->prepare("DELETE FROM products WHERE category_id = ?");
+            $stmt3->bind_param("i", $id);
+            $stmt3->execute();
+
+            // 3. Xóa danh mục cha
+            $stmt4 = $this->prepare("DELETE FROM categories WHERE id = ?");
+            $stmt4->bind_param("i", $id);
+            $res = $stmt4->execute();
+
+            $this->commit();
+            return $res;
         } catch (Exception $e) {
+            $this->rollback();
             throw $e;
         }
     }

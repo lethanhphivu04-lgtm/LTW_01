@@ -108,12 +108,27 @@ class CustomerDAO extends BaseDAO
 
     public function delete(int $id): bool
     {
+        $this->beginTransaction();
         try {
-            $sql = "DELETE FROM customers WHERE id=?";
-            $stmt = $this->prepare($sql);
-            $stmt->bind_param("i", $id);
-            return $stmt->execute();
+            // 1. Xóa chi tiết các đơn hàng thuộc khách hàng này
+            $stmt1 = $this->prepare("DELETE FROM order_details WHERE order_id IN (SELECT id FROM orders WHERE customer_id = ?)");
+            $stmt1->bind_param("i", $id);
+            $stmt1->execute();
+
+            // 2. Xóa các đơn hàng của khách hàng này
+            $stmt2 = $this->prepare("DELETE FROM orders WHERE customer_id = ?");
+            $stmt2->bind_param("i", $id);
+            $stmt2->execute();
+
+            // 3. Xóa khách hàng
+            $stmt3 = $this->prepare("DELETE FROM customers WHERE id = ?");
+            $stmt3->bind_param("i", $id);
+            $res = $stmt3->execute();
+
+            $this->commit();
+            return $res;
         } catch (Exception $e) {
+            $this->rollback();
             throw $e;
         }
     }
