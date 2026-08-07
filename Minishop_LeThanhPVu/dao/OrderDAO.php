@@ -108,6 +108,27 @@ class OrderDAO extends BaseDAO
 
     public function delete(int $id): bool
     {
+        // --- Cách 2: Xóa thủ công dữ liệu con trước (dùng khi CSDL KHÔNG CÓ ON DELETE CASCADE) ---
+        // $this->beginTransaction();
+        // try {
+        //     // 1. Xóa các chi tiết đơn hàng (order_details) thuộc đơn này
+        //     $stmt1 = $this->prepare("DELETE FROM order_details WHERE order_id = ?");
+        //     $stmt1->bind_param("i", $id);
+        //     $stmt1->execute();
+        //
+        //     // 2. Xóa đơn hàng
+        //     $stmt2 = $this->prepare("DELETE FROM orders WHERE id = ?");
+        //     $stmt2->bind_param("i", $id);
+        //     $res = $stmt2->execute();
+        //
+        //     $this->commit();
+        //     return $res;
+        // } catch (Exception $e) {
+        //     $this->rollback();
+        //     throw $e;
+        // }
+
+        // --- Cách 1: Xóa trực tiếp (CSDL ĐÃ CÓ ON DELETE CASCADE tự động xóa con) ---
         try {
             $sql = "DELETE FROM orders WHERE id=?";
             $stmt = $this->prepare($sql);

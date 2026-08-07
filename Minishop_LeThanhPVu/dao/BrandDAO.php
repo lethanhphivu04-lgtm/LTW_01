@@ -104,6 +104,36 @@ class BrandDAO extends BaseDAO
 
     public function delete(int $id): bool
     {
+        // --- Cách 2: Xóa thủ công dữ liệu con trước (dùng khi CSDL KHÔNG CÓ ON DELETE CASCADE) ---
+        // $this->beginTransaction();
+        // try {
+        //     // 1. Xóa hình ảnh & chi tiết đơn hàng của sản phẩm thuộc thương hiệu này
+        //     $stmt1 = $this->prepare("DELETE FROM product_images WHERE product_id IN (SELECT id FROM products WHERE brand_id = ?)");
+        //     $stmt1->bind_param("i", $id);
+        //     $stmt1->execute();
+        //
+        //     $stmt2 = $this->prepare("DELETE FROM order_details WHERE product_id IN (SELECT id FROM products WHERE brand_id = ?)");
+        //     $stmt2->bind_param("i", $id);
+        //     $stmt2->execute();
+        //
+        //     // 2. Xóa sản phẩm thuộc thương hiệu này
+        //     $stmt3 = $this->prepare("DELETE FROM products WHERE brand_id = ?");
+        //     $stmt3->bind_param("i", $id);
+        //     $stmt3->execute();
+        //
+        //     // 3. Xóa thương hiệu cha
+        //     $stmt4 = $this->prepare("DELETE FROM brands WHERE id = ?");
+        //     $stmt4->bind_param("i", $id);
+        //     $res = $stmt4->execute();
+        //
+        //     $this->commit();
+        //     return $res;
+        // } catch (Exception $e) {
+        //     $this->rollback();
+        //     throw $e;
+        // }
+
+        // --- Cách 1: Xóa trực tiếp (CSDL ĐÃ CÓ ON DELETE CASCADE tự động xóa con) ---
         try {
             $sql = "DELETE FROM brands WHERE id=?";
             $stmt = $this->prepare($sql);
