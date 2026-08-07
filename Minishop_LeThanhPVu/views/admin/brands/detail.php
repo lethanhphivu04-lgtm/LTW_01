@@ -11,6 +11,16 @@ ob_start();
 <div class="card card-body">
     <table class="table table-bordered mb-0">
         <tr><th width="200">Mã</th><td><?= $brand->id ?></td></tr>
+        <tr>
+            <th>Hình ảnh</th>
+            <td>
+                <?php if (!empty($brand->image)) { ?>
+                    <img src="../../../uploads/brands/<?= $brand->image ?>" alt="<?= htmlspecialchars($brand->name) ?>" class="img-thumbnail" width="150">
+                <?php } else { ?>
+                    <span class="text-muted">No Image</span>
+                <?php } ?>
+            </td>
+        </tr>
         <tr><th>Tên thương hiệu</th><td class="fw-bold"><?= htmlspecialchars($brand->name) ?></td></tr>
         <tr><th>Slug</th><td><code><?= htmlspecialchars($brand->slug) ?></code></td></tr>
         <tr><th>Mô tả</th><td><?= htmlspecialchars($brand->description ?? '') ?></td></tr>

@@ -9,6 +9,21 @@ class BrandDAO extends BaseDAO
         parent::__construct();
     }
 
+    private function mapRow(array $row): Brand
+    {
+        $brand = new Brand(
+            $row["brandname"],
+            $row["slug"],
+            $row["image"],
+            $row["description"],
+            (int)$row["status"]
+        );
+        $brand->id = (int)$row["id"];
+        $brand->createdAt = $row["created_at"] ?? '';
+        $brand->updatedAt = $row["updated_at"] ?? '';
+        return $brand;
+    }
+
     public function getAll(): array
     {
         $list = [];
@@ -17,17 +32,7 @@ class BrandDAO extends BaseDAO
             $result = $this->executeQuery($sql);
             if ($result) {
                 while ($row = $result->fetch_assoc()) {
-                    $brand = new Brand(
-                        $row["brandname"],
-                        $row["slug"],
-                        $row["image"],
-                        $row["description"],
-                        (int)$row["status"]
-                    );
-                    $brand->id = (int)$row["id"];
-                    $brand->createdAt = $row["created_at"] ?? '';
-                    $brand->updatedAt = $row["updated_at"] ?? '';
-                    $list[] = $brand;
+                    $list[] = $this->mapRow($row);
                 }
             }
         } catch (Exception $e) {
@@ -45,17 +50,7 @@ class BrandDAO extends BaseDAO
             $stmt->execute();
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
-                $brand = new Brand(
-                    $row["brandname"],
-                    $row["slug"],
-                    $row["image"],
-                    $row["description"],
-                    (int)$row["status"]
-                );
-                $brand->id = (int)$row["id"];
-                $brand->createdAt = $row["created_at"] ?? '';
-                $brand->updatedAt = $row["updated_at"] ?? '';
-                return $brand;
+                return $this->mapRow($row);
             }
         } catch (Exception $e) {
             throw $e;
@@ -104,7 +99,6 @@ class BrandDAO extends BaseDAO
 
     public function delete(int $id): bool
     {
-        // --- Cách 2: Xóa thủ công dữ liệu con trước (dùng khi CSDL KHÔNG CÓ ON DELETE CASCADE) ---
         // $this->beginTransaction();
         // try {
         //     // 1. Xóa hình ảnh & chi tiết đơn hàng của sản phẩm thuộc thương hiệu này
@@ -133,7 +127,6 @@ class BrandDAO extends BaseDAO
         //     throw $e;
         // }
 
-        // --- Cách 1: Xóa trực tiếp (CSDL ĐÃ CÓ ON DELETE CASCADE tự động xóa con) ---
         try {
             $sql = "DELETE FROM brands WHERE id=?";
             $stmt = $this->prepare($sql);
@@ -156,17 +149,7 @@ class BrandDAO extends BaseDAO
             $stmt->execute();
             $result = $stmt->get_result();
             while ($row = $result->fetch_assoc()) {
-                $brand = new Brand(
-                    $row["brandname"],
-                    $row["slug"],
-                    $row["image"],
-                    $row["description"],
-                    (int)$row["status"]
-                );
-                $brand->id = (int)$row["id"];
-                $brand->createdAt = $row["created_at"] ?? '';
-                $brand->updatedAt = $row["updated_at"] ?? '';
-                $list[] = $brand;
+                $list[] = $this->mapRow($row);
             }
         } catch (Exception $e) {
             throw $e;

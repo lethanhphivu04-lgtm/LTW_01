@@ -9,6 +9,22 @@ class OrderDAO extends BaseDAO
         parent::__construct();
     }
 
+    private function mapRow(array $row): Order
+    {
+        $o = new Order(
+            (int)$row["customer_id"],
+            $row["user_id"] ? (int)$row["user_id"] : null,
+            $row["order_code"],
+            (float)$row["total_amount"],
+            $row["note"],
+            (int)$row["status"]
+        );
+        $o->id = (int)$row["id"];
+        $o->createdAt = $row["created_at"] ?? '';
+        $o->updatedAt = $row["updated_at"] ?? '';
+        return $o;
+    }
+
     public function getAll(): array
     {
         $list = [];
@@ -17,18 +33,7 @@ class OrderDAO extends BaseDAO
             $result = $this->executeQuery($sql);
             if ($result) {
                 while ($row = $result->fetch_assoc()) {
-                    $o = new Order(
-                        (int)$row["customer_id"],
-                        $row["user_id"] ? (int)$row["user_id"] : null,
-                        $row["order_code"],
-                        (float)$row["total_amount"],
-                        $row["note"],
-                        (int)$row["status"]
-                    );
-                    $o->id = (int)$row["id"];
-                    $o->createdAt = $row["created_at"] ?? '';
-                    $o->updatedAt = $row["updated_at"] ?? '';
-                    $list[] = $o;
+                    $list[] = $this->mapRow($row);
                 }
             }
         } catch (Exception $e) {
@@ -46,18 +51,7 @@ class OrderDAO extends BaseDAO
             $stmt->execute();
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
-                $o = new Order(
-                    (int)$row["customer_id"],
-                    $row["user_id"] ? (int)$row["user_id"] : null,
-                    $row["order_code"],
-                    (float)$row["total_amount"],
-                    $row["note"],
-                    (int)$row["status"]
-                );
-                $o->id = (int)$row["id"];
-                $o->createdAt = $row["created_at"] ?? '';
-                $o->updatedAt = $row["updated_at"] ?? '';
-                return $o;
+                return $this->mapRow($row);
             }
         } catch (Exception $e) {
             throw $e;
@@ -108,7 +102,6 @@ class OrderDAO extends BaseDAO
 
     public function delete(int $id): bool
     {
-        // --- Cách 2: Xóa thủ công dữ liệu con trước (dùng khi CSDL KHÔNG CÓ ON DELETE CASCADE) ---
         // $this->beginTransaction();
         // try {
         //     // 1. Xóa các chi tiết đơn hàng (order_details) thuộc đơn này
@@ -128,7 +121,6 @@ class OrderDAO extends BaseDAO
         //     throw $e;
         // }
 
-        // --- Cách 1: Xóa trực tiếp (CSDL ĐÃ CÓ ON DELETE CASCADE tự động xóa con) ---
         try {
             $sql = "DELETE FROM orders WHERE id=?";
             $stmt = $this->prepare($sql);

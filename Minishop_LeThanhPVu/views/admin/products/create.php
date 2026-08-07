@@ -23,17 +23,49 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $description = trim($_POST['description'] ?? '');
     $status = (int)($_POST['status'] ?? 1);
 
-    // Validation
-    if ($name === '') $errors[] = 'Tên sản phẩm không được để trống';
-    if ($categoryId <= 0) $errors[] = 'Vui lòng chọn loại sản phẩm';
-    if ($brandId <= 0) $errors[] = 'Vui lòng chọn thương hiệu';
-    if ($price <= 0) $errors[] = 'Giá gốc phải lớn hơn 0';
-    if ($discountPrice < 0) $errors[] = 'Giá bán không được nhỏ hơn 0';
-    if ($quantity < 0) $errors[] = 'Số lượng không được nhỏ hơn 0';
+    // validate thong tin
+    if ($name === '') $errors[] = 'Tên sản phẩm không được để trống.';
+    if ($categoryId <= 0) $errors[] = 'Vui lòng chọn loại sản phẩm.';
+    if ($brandId <= 0) $errors[] = 'Vui lòng chọn thương hiệu.';
+    if ($price <= 0) $errors[] = 'Giá gốc phải lớn hơn 0.';
+    if ($discountPrice < 0) $errors[] = 'Giá bán không được nhỏ hơn 0.';
+    if ($quantity < 0) $errors[] = 'Số lượng không được nhỏ hơn 0.';
 
     if ($slug === '') $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
 
+    // doc file anh
+    $fileName = $_FILES["image"]["name"] ?? "";
+    $tmpName  = $_FILES["image"]["tmp_name"] ?? "";
+    $fileSize = $_FILES["image"]["size"] ?? 0;
+    $error    = $_FILES["image"]["error"] ?? 0;
+    $image    = "";
+
+    // validate anh
+    if ($fileName != "" && $error != UPLOAD_ERR_OK) {
+        $errors[] = "Upload hình ảnh không thành công.";
+    }
+
+    $allowExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+    $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    if ($fileName != "" && !in_array($extension, $allowExtensions)) {
+        $errors[] = "Chỉ cho phép file JPG, JPEG, PNG hoặc WEBP.";
+    }
+
+    $maxSize = 200 * 1024;
+    if ($fileName != "" && $fileSize > $maxSize) {
+        $errors[] = "Kích thước hình ảnh <= 200 KB.";
+    }
+
     if (empty($errors)) {
+        // upload anh
+        if ($fileName != "") {
+            $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $image = time() . "_" . $slug . "." . $extension;
+            $uploadPath = __DIR__ . "/../../../uploads/products/" . $image;
+            move_uploaded_file($tmpName, $uploadPath);
+        }
+
+        // luu db
         $p = new Product(
             $categoryId,
             $brandId,
@@ -42,11 +74,35 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $price,
             $discountPrice,
             $quantity,
-            '',
+            $image,
             $description,
             $status
         );
         $dao->insert($p);
+        $productId = $dao->getConnection()->insert_id;
+
+        // upload anh phu gallery
+        if (isset($_FILES["images"]) && !empty($_FILES["images"]["name"][0])) {
+            $totalFiles = count($_FILES["images"]["name"]);
+            for ($i = 0; $i < $totalFiles; $i++) {
+                $gName = $_FILES["images"]["name"][$i];
+                $gTmp  = $_FILES["images"]["tmp_name"][$i];
+                $gErr  = $_FILES["images"]["error"][$i];
+                $gSize = $_FILES["images"]["size"][$i];
+
+                if ($gName != "" && $gErr == UPLOAD_ERR_OK && $gSize <= $maxSize) {
+                    $gExt = strtolower(pathinfo($gName, PATHINFO_EXTENSION));
+                    if (in_array($gExt, $allowExtensions)) {
+                        $gImage = time() . "_" . $i . "_" . $slug . "." . $gExt;
+                        $gPath  = __DIR__ . "/../../../uploads/products/" . $gImage;
+                        if (move_uploaded_file($gTmp, $gPath)) {
+                            $dao->insertImage($productId, $gImage);
+                        }
+                    }
+                }
+            }
+        }
+
         header("Location: index.php");
         exit;
     }
@@ -58,11 +114,19 @@ ob_start();
 
 <?php if (!empty($errors)): ?>
 <div class="alert alert-danger">
-    <ul class="mb-0"><?php foreach ($errors as $e): ?><li><?= $e ?></li><?php endforeach; ?></ul>
+    <ul class="mb-0">
+        <?php foreach ($errors as $error): ?>
+            <li><?= $error ?></li>
+        <?php endforeach; ?>
+    </ul>
 </div>
 <?php endif; ?>
 
-<form method="POST" class="card card-body">
+<form method="POST" enctype="multipart/form-data" class="card card-body">
+    <!-- preview anh -->
+    <div class="text-center mb-3" id="preview"></div>
+    <div class="text-center mb-3" id="preview-gallery"></div>
+
     <div class="row g-3">
         <div class="col-md-6">
             <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
@@ -102,9 +166,13 @@ ob_start();
             <label class="form-label">Số lượng kho <span class="text-danger">*</span></label>
             <input type="number" name="quantity" class="form-control" value="<?= $quantity ?? 10 ?>" required>
         </div>
-        <div class="col-md-12">
-            <label class="form-label">Mô tả sản phẩm</label>
-            <textarea name="description" class="form-control" rows="3"><?= htmlspecialchars($description ?? '') ?></textarea>
+        <div class="col-md-6">
+            <label class="form-label">Hình ảnh chính</label>
+            <input type="file" id="image" name="image" class="form-control" accept="image/*">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Hình ảnh phụ (Gallery - chọn nhiều)</label>
+            <input type="file" name="images[]" id="images" class="form-control" accept="image/*" multiple>
         </div>
         <div class="col-md-6">
             <label class="form-label">Trạng thái</label>
@@ -112,6 +180,10 @@ ob_start();
                 <option value="1">Còn bán</option>
                 <option value="0">Ngừng bán</option>
             </select>
+        </div>
+        <div class="col-md-12">
+            <label class="form-label">Mô tả sản phẩm</label>
+            <textarea name="description" class="form-control" rows="3"><?= htmlspecialchars($description ?? '') ?></textarea>
         </div>
         <div class="col-12">
             <button class="btn btn-success">Lưu sản phẩm</button>

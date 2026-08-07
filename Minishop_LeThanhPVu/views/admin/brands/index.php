@@ -33,12 +33,19 @@ ob_start();
 
 <table class="table table-bordered table-striped align-middle">
     <thead class="table-dark">
-        <tr><th>STT</th><th>Tên thương hiệu</th><th>Slug</th><th>Trạng thái</th><th width="180">Thao tác</th></tr>
+        <tr><th>STT</th><th>Hình ảnh</th><th>Tên thương hiệu</th><th>Slug</th><th>Trạng thái</th><th width="180">Thao tác</th></tr>
     </thead>
     <tbody>
         <?php $stt = 1; foreach ($list as $b): ?>
         <tr>
             <td><?= $stt++ ?></td>
+            <td>
+                <?php if (!empty($b->image)) { ?>
+                    <img src="../../../uploads/brands/<?= $b->image ?>" alt="<?= htmlspecialchars($b->name) ?>" class="img-thumbnail" width="60">
+                <?php } else { ?>
+                    <span class="text-muted">No Image</span>
+                <?php } ?>
+            </td>
             <td class="fw-bold"><?= htmlspecialchars($b->name) ?></td>
             <td><code><?= htmlspecialchars($b->slug) ?></code></td>
             <td><span class="badge bg-<?= $b->status ? 'success' : 'secondary' ?>"><?= $b->status ? 'Hiển thị' : 'Ẩn' ?></span></td>

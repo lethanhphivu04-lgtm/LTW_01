@@ -9,6 +9,26 @@ class ProductDAO extends BaseDAO
         parent::__construct();
     }
 
+    private function mapRow(array $row): Product
+    {
+        $p = new Product(
+            (int)$row["category_id"],
+            (int)$row["brand_id"],
+            $row["proname"],
+            $row["slug"],
+            (float)$row["price"],
+            (float)$row["discount_price"],
+            (int)$row["quantity"],
+            $row["image"],
+            $row["description"],
+            (int)$row["status"]
+        );
+        $p->id = (int)$row["id"];
+        $p->createdAt = $row["created_at"] ?? '';
+        $p->updatedAt = $row["updated_at"] ?? '';
+        return $p;
+    }
+
     public function getAll(): array
     {
         $list = [];
@@ -17,22 +37,7 @@ class ProductDAO extends BaseDAO
             $result = $this->executeQuery($sql);
             if ($result) {
                 while ($row = $result->fetch_assoc()) {
-                    $p = new Product(
-                        (int)$row["category_id"],
-                        (int)$row["brand_id"],
-                        $row["proname"],
-                        $row["slug"],
-                        (float)$row["price"],
-                        (float)$row["discount_price"],
-                        (int)$row["quantity"],
-                        $row["image"],
-                        $row["description"],
-                        (int)$row["status"]
-                    );
-                    $p->id = (int)$row["id"];
-                    $p->createdAt = $row["created_at"] ?? '';
-                    $p->updatedAt = $row["updated_at"] ?? '';
-                    $list[] = $p;
+                    $list[] = $this->mapRow($row);
                 }
             }
         } catch (Exception $e) {
@@ -50,22 +55,7 @@ class ProductDAO extends BaseDAO
             $stmt->execute();
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
-                $p = new Product(
-                    (int)$row["category_id"],
-                    (int)$row["brand_id"],
-                    $row["proname"],
-                    $row["slug"],
-                    (float)$row["price"],
-                    (float)$row["discount_price"],
-                    (int)$row["quantity"],
-                    $row["image"],
-                    $row["description"],
-                    (int)$row["status"]
-                );
-                $p->id = (int)$row["id"];
-                $p->createdAt = $row["created_at"] ?? '';
-                $p->updatedAt = $row["updated_at"] ?? '';
-                return $p;
+                return $this->mapRow($row);
             }
         } catch (Exception $e) {
             throw $e;
@@ -124,7 +114,6 @@ class ProductDAO extends BaseDAO
 
     public function delete(int $id): bool
     {
-        // --- Cách 2: Xóa thủ công dữ liệu con trước (dùng khi CSDL KHÔNG CÓ ON DELETE CASCADE) ---
         // $this->beginTransaction();
         // try {
         //     // 1. Xóa hình ảnh sản phẩm (product_images)
@@ -149,7 +138,6 @@ class ProductDAO extends BaseDAO
         //     throw $e;
         // }
 
-        // --- Cách 1: Xóa trực tiếp (CSDL ĐÃ CÓ ON DELETE CASCADE tự động xóa con) ---
         try {
             $sql = "DELETE FROM products WHERE id=?";
             $stmt = $this->prepare($sql);
@@ -239,5 +227,62 @@ class ProductDAO extends BaseDAO
             throw $e;
         }
         return $list;
+    }
+
+    // E1: Them anh phu gallery
+    public function insertImage($productId, $image)
+    {
+        try {
+            $sql = "INSERT INTO product_images(product_id, image) VALUES (?, ?)";
+            $stmt = $this->prepare($sql);
+            $stmt->bind_param("is", $productId, $image);
+            return $stmt->execute();
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    // E1: Lay danh sach anh phu gallery
+    public function getImagesByProductId($productId): array
+    {
+        $list = [];
+        try {
+            $sql = "SELECT id, product_id, image, sort_order, created_at FROM product_images WHERE product_id = ? ORDER BY id DESC";
+            $stmt = $this->prepare($sql);
+            $stmt->bind_param("i", $productId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $list[] = $row;
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return $list;
+    }
+
+    // E1: Xoa anh phu gallery (xoa file vat ly truoc khi xoa DB)
+    public function deleteImage($id): bool
+    {
+        try {
+            $sqlSelect = "SELECT image FROM product_images WHERE id = ?";
+            $stmtSelect = $this->prepare($sqlSelect);
+            $stmtSelect->bind_param("i", $id);
+            $stmtSelect->execute();
+            $res = $stmtSelect->get_result();
+            if ($row = $res->fetch_assoc()) {
+                $filePath = __DIR__ . "/../../../uploads/products/" . $row['image'];
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
+
+            $sqlDelete = "DELETE FROM product_images WHERE id = ?";
+            $stmtDelete = $this->prepare($sqlDelete);
+            $stmtDelete->bind_param("i", $id);
+            return $stmtDelete->execute();
+        } catch (Exception $e) {
+            throw $e;
+        }
     }
 }

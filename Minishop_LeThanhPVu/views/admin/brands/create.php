@@ -13,8 +13,39 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if ($name === '') $errors[] = 'Tên thương hiệu không được để trống';
     if ($slug === '') $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
 
+    // doc file anh
+    $fileName = $_FILES["image"]["name"] ?? "";
+    $tmpName  = $_FILES["image"]["tmp_name"] ?? "";
+    $fileSize = $_FILES["image"]["size"] ?? 0;
+    $error    = $_FILES["image"]["error"] ?? 0;
+    $image    = "";
+
+    // validate anh
+    if ($fileName != "" && $error != UPLOAD_ERR_OK) {
+        $errors[] = "Upload hình ảnh không thành công.";
+    }
+
+    $allowExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+    $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    if ($fileName != "" && !in_array($extension, $allowExtensions)) {
+        $errors[] = "Chỉ cho phép file JPG, JPEG, PNG hoặc WEBP.";
+    }
+
+    $maxSize = 200 * 1024;
+    if ($fileName != "" && $fileSize > $maxSize) {
+        $errors[] = "Kích thước hình ảnh <= 200 KB.";
+    }
+
     if (empty($errors)) {
-        $brand = new Brand($name, $slug, '', $description, $status);
+        // upload anh
+        if ($fileName != "") {
+            $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $image = time() . "_" . $slug . "." . $extension;
+            $uploadPath = __DIR__ . "/../../../uploads/brands/" . $image;
+            move_uploaded_file($tmpName, $uploadPath);
+        }
+
+        $brand = new Brand($name, $slug, $image, $description, $status);
         $dao->insert($brand);
         header("Location: index.php");
         exit;
@@ -27,12 +58,16 @@ ob_start();
 <?php if (!empty($errors)): ?>
 <div class="alert alert-danger"><ul class="mb-0"><?php foreach ($errors as $e): ?><li><?= $e ?></li><?php endforeach; ?></ul></div>
 <?php endif; ?>
-<form method="POST" class="card card-body">
+<form method="POST" enctype="multipart/form-data" class="card card-body">
+    <!-- preview anh -->
+    <div class="text-center mb-3" id="preview"></div>
+
     <div class="row g-3">
         <div class="col-md-6"><label class="form-label">Tên thương hiệu <span class="text-danger">*</span></label><input name="brandname" class="form-control" value="<?= htmlspecialchars($name ?? '') ?>" required></div>
         <div class="col-md-6"><label class="form-label">Slug</label><input name="slug" class="form-control" value="<?= htmlspecialchars($slug ?? '') ?>"></div>
-        <div class="col-md-12"><label class="form-label">Mô tả</label><textarea name="description" class="form-control" rows="3"><?= htmlspecialchars($description ?? '') ?></textarea></div>
+        <div class="col-md-6"><label class="form-label">Hình ảnh (Logo)</label><input type="file" id="image" name="image" class="form-control" accept="image/*"></div>
         <div class="col-md-6"><label class="form-label">Trạng thái</label><select name="status" class="form-select"><option value="1">Hiển thị</option><option value="0">Ẩn</option></select></div>
+        <div class="col-md-12"><label class="form-label">Mô tả</label><textarea name="description" class="form-control" rows="3"><?= htmlspecialchars($description ?? '') ?></textarea></div>
         <div class="col-12"><button class="btn btn-success">Lưu</button> <a href="index.php" class="btn btn-secondary">Quay lại</a></div>
     </div>
 </form>

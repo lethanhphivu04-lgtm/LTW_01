@@ -9,6 +9,22 @@ class CustomerDAO extends BaseDAO
         parent::__construct();
     }
 
+    private function mapRow(array $row): Customer
+    {
+        $c = new Customer(
+            $row["fullname"],
+            $row["phone"],
+            $row["email"],
+            $row["address"],
+            $row["note"],
+            (int)$row["status"]
+        );
+        $c->id = (int)$row["id"];
+        $c->createdAt = $row["created_at"] ?? '';
+        $c->updatedAt = $row["updated_at"] ?? '';
+        return $c;
+    }
+
     public function getAll(): array
     {
         $list = [];
@@ -17,18 +33,7 @@ class CustomerDAO extends BaseDAO
             $result = $this->executeQuery($sql);
             if ($result) {
                 while ($row = $result->fetch_assoc()) {
-                    $c = new Customer(
-                        $row["fullname"],
-                        $row["phone"],
-                        $row["email"],
-                        $row["address"],
-                        $row["note"],
-                        (int)$row["status"]
-                    );
-                    $c->id = (int)$row["id"];
-                    $c->createdAt = $row["created_at"] ?? '';
-                    $c->updatedAt = $row["updated_at"] ?? '';
-                    $list[] = $c;
+                    $list[] = $this->mapRow($row);
                 }
             }
         } catch (Exception $e) {
@@ -46,18 +51,7 @@ class CustomerDAO extends BaseDAO
             $stmt->execute();
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
-                $c = new Customer(
-                    $row["fullname"],
-                    $row["phone"],
-                    $row["email"],
-                    $row["address"],
-                    $row["note"],
-                    (int)$row["status"]
-                );
-                $c->id = (int)$row["id"];
-                $c->createdAt = $row["created_at"] ?? '';
-                $c->updatedAt = $row["updated_at"] ?? '';
-                return $c;
+                return $this->mapRow($row);
             }
         } catch (Exception $e) {
             throw $e;
@@ -108,7 +102,6 @@ class CustomerDAO extends BaseDAO
 
     public function delete(int $id): bool
     {
-        // --- Cách 2: Xóa thủ công dữ liệu con trước (dùng khi CSDL KHÔNG CÓ ON DELETE CASCADE) ---
         // $this->beginTransaction();
         // try {
         //     // 1. Xóa chi tiết các đơn hàng thuộc khách hàng này
@@ -133,7 +126,6 @@ class CustomerDAO extends BaseDAO
         //     throw $e;
         // }
 
-        // --- Cách 1: Xóa trực tiếp (CSDL ĐÃ CÓ ON DELETE CASCADE tự động xóa con) ---
         try {
             $sql = "DELETE FROM customers WHERE id=?";
             $stmt = $this->prepare($sql);
@@ -156,18 +148,7 @@ class CustomerDAO extends BaseDAO
             $stmt->execute();
             $result = $stmt->get_result();
             while ($row = $result->fetch_assoc()) {
-                $c = new Customer(
-                    $row["fullname"],
-                    $row["phone"],
-                    $row["email"],
-                    $row["address"],
-                    $row["note"],
-                    (int)$row["status"]
-                );
-                $c->id = (int)$row["id"];
-                $c->createdAt = $row["created_at"] ?? '';
-                $c->updatedAt = $row["updated_at"] ?? '';
-                $list[] = $c;
+                $list[] = $this->mapRow($row);
             }
         } catch (Exception $e) {
             throw $e;

@@ -17,13 +17,60 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if ($name === '') $errors[] = 'Tên thương hiệu không được để trống';
     if ($slug === '') $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
 
+    // doc file anh
+    $fileName = $_FILES["image"]["name"] ?? "";
+    $tmpName  = $_FILES["image"]["tmp_name"] ?? "";
+    $fileSize = $_FILES["image"]["size"] ?? 0;
+    $error    = $_FILES["image"]["error"] ?? 0;
+
+    // validate anh
+    if ($fileName != "" && $error != UPLOAD_ERR_OK) {
+        $errors[] = "Upload hình ảnh không thành công.";
+    }
+
+    $allowExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+    $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    if ($fileName != "" && !in_array($extension, $allowExtensions)) {
+        $errors[] = "Chỉ cho phép file JPG, JPEG, PNG hoặc WEBP.";
+    }
+
+    $maxSize = 200 * 1024;
+    if ($fileName != "" && $fileSize > $maxSize) {
+        $errors[] = "Kích thước hình ảnh <= 200 KB.";
+    }
+
     if (empty($errors)) {
-        $brand->name = $name; $brand->slug = $slug; $brand->description = $description; $brand->status = $status;
+        $image = $brand->image;
+        if ($fileName != "") {
+            $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $image = time() . "_" . $slug . "." . $extension;
+            $uploadPath = __DIR__ . "/../../../uploads/brands/" . $image;
+
+            // xoa anh cu
+            if (!empty($brand->image)) {
+                $oldImage = __DIR__ . "/../../../uploads/brands/" . $brand->image;
+                if (file_exists($oldImage)) {
+                    unlink($oldImage);
+                }
+            }
+            move_uploaded_file($tmpName, $uploadPath);
+        }
+
+        $brand->name = $name;
+        $brand->slug = $slug;
+        $brand->image = $image;
+        $brand->description = $description;
+        $brand->status = $status;
+
         $dao->update($brand);
-        header("Location: index.php"); exit;
+        header("Location: index.php");
+        exit;
     }
 } else {
-    $name = $brand->name; $slug = $brand->slug; $description = $brand->description; $status = $brand->status;
+    $name = $brand->name;
+    $slug = $brand->slug;
+    $description = $brand->description;
+    $status = $brand->status;
 }
 
 ob_start();
@@ -32,12 +79,22 @@ ob_start();
 <?php if (!empty($errors)): ?>
 <div class="alert alert-danger"><ul class="mb-0"><?php foreach ($errors as $e): ?><li><?= $e ?></li><?php endforeach; ?></ul></div>
 <?php endif; ?>
-<form method="POST" class="card card-body">
+<form method="POST" enctype="multipart/form-data" class="card card-body">
+    <!-- preview anh hien tai -->
+    <div class="text-center mb-3">
+        <?php if (!empty($brand->image)) { ?>
+            <img src="../../../uploads/brands/<?= $brand->image ?>" class="img-thumbnail" width="150" id="preview">
+        <?php } else { ?>
+            <div id="preview"><span class="text-muted">No Image</span></div>
+        <?php } ?>
+    </div>
+
     <div class="row g-3">
         <div class="col-md-6"><label class="form-label">Tên thương hiệu <span class="text-danger">*</span></label><input name="brandname" class="form-control" value="<?= htmlspecialchars($name) ?>" required></div>
         <div class="col-md-6"><label class="form-label">Slug</label><input name="slug" class="form-control" value="<?= htmlspecialchars($slug) ?>"></div>
-        <div class="col-md-12"><label class="form-label">Mô tả</label><textarea name="description" class="form-control" rows="3"><?= htmlspecialchars($description ?? '') ?></textarea></div>
+        <div class="col-md-6"><label class="form-label">Thay đổi hình ảnh</label><input type="file" id="image" name="image" class="form-control" accept="image/*"></div>
         <div class="col-md-6"><label class="form-label">Trạng thái</label><select name="status" class="form-select"><option value="1" <?= $status == 1 ? 'selected' : '' ?>>Hiển thị</option><option value="0" <?= $status == 0 ? 'selected' : '' ?>>Ẩn</option></select></div>
+        <div class="col-md-12"><label class="form-label">Mô tả</label><textarea name="description" class="form-control" rows="3"><?= htmlspecialchars($description ?? '') ?></textarea></div>
         <div class="col-12"><button class="btn btn-success">Cập nhật</button> <a href="index.php" class="btn btn-secondary">Quay lại</a></div>
     </div>
 </form>

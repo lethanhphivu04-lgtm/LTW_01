@@ -9,6 +9,21 @@ class CategoryDAO extends BaseDAO
         parent::__construct();
     }
 
+    private function mapRow(array $row): Category
+    {
+        $category = new Category(
+            $row["catename"],
+            $row["slug"],
+            $row["image"],
+            $row["description"],
+            (int)$row["status"]
+        );
+        $category->id = (int)$row["id"];
+        $category->createdAt = $row["created_at"] ?? '';
+        $category->updatedAt = $row["updated_at"] ?? '';
+        return $category;
+    }
+
     // Lấy tất cả danh mục (có hỗ trợ tìm kiếm theo từ khóa)
     public function getAll(string $keyword = ''): array
     {
@@ -27,17 +42,7 @@ class CategoryDAO extends BaseDAO
             $stmt->execute();
             $result = $stmt->get_result();
             while ($row = $result->fetch_assoc()) {
-                $category = new Category(
-                    $row["catename"],
-                    $row["slug"],
-                    $row["image"],
-                    $row["description"],
-                    (int)$row["status"]
-                );
-                $category->id = (int)$row["id"];
-                $category->createdAt = $row["created_at"] ?? '';
-                $category->updatedAt = $row["updated_at"] ?? '';
-                $list[] = $category;
+                $list[] = $this->mapRow($row);
             }
         } catch (Exception $e) {
             throw $e;
@@ -55,17 +60,7 @@ class CategoryDAO extends BaseDAO
             $stmt->execute();
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
-                $category = new Category(
-                    $row["catename"],
-                    $row["slug"],
-                    $row["image"],
-                    $row["description"],
-                    (int)$row["status"]
-                );
-                $category->id = (int)$row["id"];
-                $category->createdAt = $row["created_at"] ?? '';
-                $category->updatedAt = $row["updated_at"] ?? '';
-                return $category;
+                return $this->mapRow($row);
             }
         } catch (Exception $e) {
             throw $e;
@@ -117,7 +112,6 @@ class CategoryDAO extends BaseDAO
     // Xóa danh mục
     public function delete(int $id): bool
     {
-        // --- Cách 2: Xóa thủ công dữ liệu con trước (dùng khi CSDL KHÔNG CÓ ON DELETE CASCADE) ---
         // $this->beginTransaction();
         // try {
         //     // 1. Xóa hình ảnh & chi tiết đơn hàng của các sản phẩm thuộc danh mục
@@ -146,7 +140,6 @@ class CategoryDAO extends BaseDAO
         //     throw $e;
         // }
 
-        // --- Cách 1: Xóa trực tiếp (CSDL ĐÃ CÓ ON DELETE CASCADE tự động xóa con) ---
         try {
             $sql = "DELETE FROM categories WHERE id=?";
             $stmt = $this->prepare($sql);

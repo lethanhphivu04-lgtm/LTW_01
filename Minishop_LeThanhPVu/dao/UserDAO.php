@@ -9,6 +9,24 @@ class UserDAO extends BaseDAO
         parent::__construct();
     }
 
+    private function mapRow(array $row): User
+    {
+        $u = new User(
+            $row["fullname"],
+            $row["username"],
+            $row["password"],
+            $row["email"],
+            $row["phone"],
+            $row["address"],
+            (int)$row["role"],
+            (int)$row["status"]
+        );
+        $u->id = (int)$row["id"];
+        $u->createdAt = $row["created_at"] ?? '';
+        $u->updatedAt = $row["updated_at"] ?? '';
+        return $u;
+    }
+
     public function getAll(): array
     {
         $list = [];
@@ -17,20 +35,7 @@ class UserDAO extends BaseDAO
             $result = $this->executeQuery($sql);
             if ($result) {
                 while ($row = $result->fetch_assoc()) {
-                    $u = new User(
-                        $row["fullname"],
-                        $row["username"],
-                        $row["password"],
-                        $row["email"],
-                        $row["phone"],
-                        $row["address"],
-                        (int)$row["role"],
-                        (int)$row["status"]
-                    );
-                    $u->id = (int)$row["id"];
-                    $u->createdAt = $row["created_at"] ?? '';
-                    $u->updatedAt = $row["updated_at"] ?? '';
-                    $list[] = $u;
+                    $list[] = $this->mapRow($row);
                 }
             }
         } catch (Exception $e) {
@@ -48,20 +53,7 @@ class UserDAO extends BaseDAO
             $stmt->execute();
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
-                $u = new User(
-                    $row["fullname"],
-                    $row["username"],
-                    $row["password"],
-                    $row["email"],
-                    $row["phone"],
-                    $row["address"],
-                    (int)$row["role"],
-                    (int)$row["status"]
-                );
-                $u->id = (int)$row["id"];
-                $u->createdAt = $row["created_at"] ?? '';
-                $u->updatedAt = $row["updated_at"] ?? '';
-                return $u;
+                return $this->mapRow($row);
             }
         } catch (Exception $e) {
             throw $e;
@@ -107,6 +99,7 @@ class UserDAO extends BaseDAO
                 $u->role,
                 $u->status,
                 $u->id
+                
             );
             return $stmt->execute();
         } catch (Exception $e) {
@@ -138,20 +131,7 @@ class UserDAO extends BaseDAO
             $stmt->execute();
             $result = $stmt->get_result();
             while ($row = $result->fetch_assoc()) {
-                $u = new User(
-                    $row["fullname"],
-                    $row["username"],
-                    $row["password"],
-                    $row["email"],
-                    $row["phone"],
-                    $row["address"],
-                    (int)$row["role"],
-                    (int)$row["status"]
-                );
-                $u->id = (int)$row["id"];
-                $u->createdAt = $row["created_at"] ?? '';
-                $u->updatedAt = $row["updated_at"] ?? '';
-                $list[] = $u;
+                $list[] = $this->mapRow($row);
             }
         } catch (Exception $e) {
             throw $e;

@@ -2,5 +2,7 @@
     <small>&copy; <?= date('Y') ?> Mini Shop - Lê Thanh Phi Vũ. All rights reserved.</small>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- script preview -->
+<script src="/LTW_01/Minishop_LeThanhPVu/assets/admin/admin.js"></script>
 </body>
 </html>

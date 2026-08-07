@@ -28,12 +28,30 @@ ob_start();
 
 <table class="table table-bordered table-striped align-middle">
     <thead class="table-dark">
-        <tr><th>STT</th><th>Tên sản phẩm</th><th>Danh mục</th><th>Thương hiệu</th><th>Giá gốc</th><th>Giá bán</th><th>SL</th><th>Trạng thái</th><th width="180">Thao tác</th></tr>
+        <tr>
+            <th>STT</th>
+            <th>Hình ảnh</th>
+            <th>Tên sản phẩm</th>
+            <th>Danh mục</th>
+            <th>Thương hiệu</th>
+            <th>Giá gốc</th>
+            <th>Giá bán</th>
+            <th>SL</th>
+            <th>Trạng thái</th>
+            <th width="180">Thao tác</th>
+        </tr>
     </thead>
     <tbody>
         <?php $stt = 1; foreach ($list as $p): ?>
         <tr>
             <td><?= $stt++ ?></td>
+            <td>
+                <?php if (!empty($p['image'])) { ?>
+                    <img src="../../../uploads/products/<?= $p['image'] ?>" alt="<?= htmlspecialchars($p['proname']) ?>" class="img-thumbnail" width="80">
+                <?php } else { ?>
+                    <span class="text-muted">No Image</span>
+                <?php } ?>
+            </td>
             <td class="fw-bold"><?= htmlspecialchars($p['proname']) ?></td>
             <td><span class="badge bg-primary"><?= htmlspecialchars($p['catename']) ?></span></td>
             <td><span class="badge bg-secondary"><?= htmlspecialchars($p['brandname']) ?></span></td>

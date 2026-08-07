@@ -13,6 +13,16 @@ ob_start();
 <div class="card card-body">
     <table class="table table-bordered mb-0">
         <tr><th width="200">Mã loại</th><td><?= $cat->id ?></td></tr>
+        <tr>
+            <th>Hình ảnh</th>
+            <td>
+                <?php if (!empty($cat->image)) { ?>
+                    <img src="../../../uploads/categories/<?= $cat->image ?>" alt="<?= htmlspecialchars($cat->name) ?>" class="img-thumbnail" width="150">
+                <?php } else { ?>
+                    <span class="text-muted">No Image</span>
+                <?php } ?>
+            </td>
+        </tr>
         <tr><th>Tên loại</th><td class="fw-bold"><?= htmlspecialchars($cat->name) ?></td></tr>
         <tr><th>Slug</th><td><code><?= htmlspecialchars($cat->slug) ?></code></td></tr>
         <tr><th>Mô tả</th><td><?= htmlspecialchars($cat->description ?? '') ?></td></tr>
