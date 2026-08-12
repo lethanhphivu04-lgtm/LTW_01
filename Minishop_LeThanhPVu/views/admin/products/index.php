@@ -9,7 +9,23 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete') {
 }
 
 $keyword = trim($_GET['keyword'] ?? '');
-$list = $dao->getAllWithJoin($keyword);
+$sort = trim($_GET['sort'] ?? 'default');
+$limit = max(1, (int)($_GET['limit'] ?? 10));
+$page = max(1, (int)($_GET['page'] ?? 1));
+$offset = ($page - 1) * $limit;
+
+$totalRecords = $dao->count("products", "proname", $keyword);
+$totalPages = (int)ceil($totalRecords / $limit);
+
+$list = $dao->getPage($limit, $offset, $keyword, $sort);
+
+$sortOptions = [
+    'default' => 'Mới nhất',
+    'name_asc' => 'Tên A-Z',
+    'name_desc' => 'Tên Z-A',
+    'price_asc' => 'Giá tăng dần',
+    'price_desc' => 'Giá giảm dần'
+];
 
 ob_start();
 ?>
@@ -18,13 +34,7 @@ ob_start();
     <a href="create.php" class="btn btn-success btn-sm">+ Thêm sản phẩm</a>
 </div>
 
-<form method="GET" class="row g-2 mb-3">
-    <div class="col-md-4"><input name="keyword" class="form-control" placeholder="Tìm theo tên SP, danh mục, thương hiệu..." value="<?= htmlspecialchars($keyword) ?>"></div>
-    <div class="col-auto">
-        <button class="btn btn-outline-primary">Tìm kiếm</button>
-        <?php if ($keyword !== ''): ?><a href="index.php" class="btn btn-outline-secondary">Xóa lọc</a><?php endif; ?>
-    </div>
-</form>
+<?php include __DIR__ . "/../layouts/filter_bar.php"; ?>
 
 <table class="table table-bordered table-striped align-middle">
     <thead class="table-dark">
@@ -42,7 +52,7 @@ ob_start();
         </tr>
     </thead>
     <tbody>
-        <?php $stt = 1; foreach ($list as $p): ?>
+        <?php $stt = $offset + 1; foreach ($list as $p): ?>
         <tr>
             <td><?= $stt++ ?></td>
             <td>
@@ -66,7 +76,11 @@ ob_start();
             </td>
         </tr>
         <?php endforeach; ?>
-        <?php if (empty($list)): ?><tr><td colspan="9" class="text-center text-muted">Không tìm thấy kết quả</td></tr><?php endif; ?>
+        <?php if (empty($list)): ?><tr><td colspan="10" class="text-center text-muted">Không tìm thấy sản phẩm nào</td></tr><?php endif; ?>
     </tbody>
 </table>
+
+<?php include __DIR__ . "/../layouts/pagination.php"; ?>
 <?php $content = ob_get_clean(); include __DIR__ . "/../layouts/master.php"; ?>
+
+

@@ -14,27 +14,27 @@ class BaseDAO extends Database
         return $this->conn->query($sql);
     }
 
-    // Chuẩn bị câu lệnh Prepared Statement
     protected function prepare(string $sql): mysqli_stmt|false
     {
         return $this->conn->prepare($sql);
     }
 
-    // Bắt đầu Transaction
-    protected function beginTransaction(): void
-    {
-        $this->conn->begin_transaction();
-    }
 
-    // Xác nhận Transaction
-    protected function commit(): void
+    public function count(string $table, string $column = "", string $keyword = ""): int
     {
-        $this->conn->commit();
-    }
-
-    // Hủy Transaction
-    protected function rollback(): void
-    {
-        $this->conn->rollback();
+        if ($keyword === "" || $column === "") {
+            $sql = "SELECT COUNT(*) AS total FROM $table";
+            $result = $this->conn->query($sql);
+            $row = $result ? $result->fetch_assoc() : null;
+            return (int)($row["total"] ?? 0);
+        }
+        $sql = "SELECT COUNT(*) AS total FROM $table WHERE $column LIKE ?";
+        $stmt = $this->conn->prepare($sql);
+        $kw = "%$keyword%";
+        $stmt->bind_param("s", $kw);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        return (int)($row["total"] ?? 0);
     }
 }
+

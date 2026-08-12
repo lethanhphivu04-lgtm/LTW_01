@@ -1,7 +1,18 @@
 <?php
+require_once __DIR__ . "/../../../models/User.php";
+require_once __DIR__ . "/../../../middleware/AuthMiddleware.php";
+require_once __DIR__ . "/../../../middleware/CsrfMiddleware.php";
+AuthMiddleware::handle();
+CsrfMiddleware::generateToken();
+
+
+
 $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
 $pos = strpos($scriptName, '/views/admin');
 $adminUrl = ($pos !== false) ? substr($scriptName, 0, $pos + 12) : '/LeThanhPhiVu_LTW_001/Minishop_LeThanhPVu/views/admin';
+
+$user = $_SESSION["user"] ?? null;
+$displayName = $user ? htmlspecialchars($user->fullname . ($user->role ? ' (Admin)' : ' (Nhân viên)')) : 'Chưa đăng nhập';
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -22,6 +33,35 @@ $adminUrl = ($pos !== false) ? substr($scriptName, 0, $pos + 12) : '/LeThanhPhiV
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3 shadow-sm">
     <a class="navbar-brand fw-bold text-primary" href="<?= $adminUrl ?>/dashboard.php"><i class="bi bi-cart-fill"></i> MINI SHOP</a>
-    <span class="navbar-text ms-auto me-3 text-white-50"><i class="bi bi-person-circle"></i> Lê Thanh Phi Vũ (Admin)</span>
-    <a href="#" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>
+    <div class="ms-auto d-flex align-items-center gap-3">
+        <span class="navbar-text text-white mb-0"><i class="bi bi-person-circle fs-5 me-1"></i> <?= $displayName ?></span>
+        <?php if ($user): ?>
+            <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                <i class="bi bi-box-arrow-right"></i> Đăng xuất
+            </button>
+        <?php endif; ?>
+    </div>
 </nav>
+
+<?php if ($user): ?>
+<!-- Modal Xác nhận Đăng xuất -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white py-2">
+        <h5 class="modal-title fs-6 fw-bold" id="logoutModalLabel"><i class="bi bi-exclamation-triangle-fill me-2"></i>Xác nhận đăng xuất</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-dark py-4">
+        Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?
+      </div>
+      <div class="modal-footer bg-light py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+        <a href="<?= $adminUrl ?>/logout.php" class="btn btn-danger btn-sm fw-bold">Đăng xuất</a>
+      </div>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
+
+

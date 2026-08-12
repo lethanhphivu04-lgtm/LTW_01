@@ -5,7 +5,9 @@ $dao = new CategoryDAO();
 $errors = [];
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    CsrfMiddleware::verify();
     $name = trim($_POST['catename'] ?? '');
+
     $slug = trim($_POST['slug'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $status = (int)($_POST['status'] ?? 1);
@@ -64,6 +66,8 @@ ob_start();
 <?php endif; ?>
 
 <form method="POST" enctype="multipart/form-data" class="card card-body">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+
     <!-- preview anh -->
     <div class="text-center mb-3" id="preview"></div>
 

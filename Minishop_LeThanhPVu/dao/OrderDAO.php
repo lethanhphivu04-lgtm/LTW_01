@@ -158,8 +158,24 @@ class OrderDAO extends BaseDAO
         return $list;
     }
 
-    // Lấy danh sách đơn hàng kèm tên khách hàng + nhân viên (JOIN), có tìm kiếm
-    public function getAllWithJoin(string $keyword = ''): array
+    public function count(string $table = "orders", string $column = "order_code", string $keyword = ""): int
+    {
+        if ($keyword === '') {
+            return parent::count("orders");
+        }
+        $sql = "SELECT COUNT(*) AS total 
+                FROM orders o 
+                LEFT JOIN customers c ON o.customer_id = c.id 
+                WHERE o.order_code LIKE ? OR c.fullname LIKE ?";
+        $stmt = $this->prepare($sql);
+        $kw = "%$keyword%";
+        $stmt->bind_param("ss", $kw, $kw);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        return (int)($row['total'] ?? 0);
+    }
+
+    public function getPage(int $limit, int $offset, string $keyword = '', string $sort = ''): array
     {
         $list = [];
         try {
@@ -170,11 +186,21 @@ class OrderDAO extends BaseDAO
             if ($keyword !== '') {
                 $sql .= " WHERE o.order_code LIKE ? OR c.fullname LIKE ?";
             }
-            $sql .= " ORDER BY o.id DESC";
+            switch ($sort) {
+                case 'code_asc': $sql .= " ORDER BY o.order_code ASC"; break;
+                case 'code_desc': $sql .= " ORDER BY o.order_code DESC"; break;
+                case 'amount_asc': $sql .= " ORDER BY o.total_amount ASC"; break;
+                case 'amount_desc': $sql .= " ORDER BY o.total_amount DESC"; break;
+                default: $sql .= " ORDER BY o.id DESC"; break;
+            }
+            $sql .= " LIMIT ? OFFSET ?";
+
             $stmt = $this->prepare($sql);
             if ($keyword !== '') {
                 $kw = "%$keyword%";
-                $stmt->bind_param("ss", $kw, $kw);
+                $stmt->bind_param("ssii", $kw, $kw, $limit, $offset);
+            } else {
+                $stmt->bind_param("ii", $limit, $offset);
             }
             $stmt->execute();
             $result = $stmt->get_result();
@@ -186,6 +212,7 @@ class OrderDAO extends BaseDAO
         }
         return $list;
     }
+
 
     // Lấy 1 đơn hàng kèm tên khách hàng + nhân viên
     public function findByIdWithJoin(int $id): ?array

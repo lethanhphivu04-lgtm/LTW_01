@@ -61,7 +61,25 @@ class UserDAO extends BaseDAO
         return null;
     }
 
+    public function findByUsername(string $username): ?User
+    {
+        try {
+            $sql = "SELECT id, fullname, username, password, email, phone, address, role, status, created_at, updated_at FROM users WHERE username = ?";
+            $stmt = $this->prepare($sql);
+            $stmt->bind_param("s", $username);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                return $this->mapRow($row);
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return null;
+    }
+
     public function insert(User $u): bool
+
     {
         try {
             $sql = "INSERT INTO users(fullname, username, password, email, phone, address, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -119,15 +137,44 @@ class UserDAO extends BaseDAO
         }
     }
 
-    // Tìm kiếm người dùng
-    public function search(string $keyword): array
+
+    public function count(string $table = "users", string $column = "fullname", string $keyword = ""): int
+    {
+        if ($keyword === '') {
+            return parent::count("users");
+        }
+        $sql = "SELECT COUNT(*) AS total FROM users WHERE fullname LIKE ? OR username LIKE ? OR email LIKE ?";
+        $stmt = $this->prepare($sql);
+        $kw = "%$keyword%";
+        $stmt->bind_param("sss", $kw, $kw, $kw);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        return (int)($row['total'] ?? 0);
+    }
+
+    public function getPage(int $limit, int $offset, string $keyword = '', string $sort = ''): array
     {
         $list = [];
         try {
-            $sql = "SELECT id, fullname, username, password, email, phone, address, role, status, created_at, updated_at FROM users WHERE fullname LIKE ? OR username LIKE ? OR email LIKE ? ORDER BY id DESC";
+            $sql = "SELECT id, fullname, username, password, email, phone, address, role, status, created_at, updated_at FROM users";
+            if ($keyword !== '') {
+                $sql .= " WHERE fullname LIKE ? OR username LIKE ? OR email LIKE ?";
+            }
+            switch ($sort) {
+                case 'name_asc': $sql .= " ORDER BY fullname ASC"; break;
+                case 'name_desc': $sql .= " ORDER BY fullname DESC"; break;
+                case 'id_asc': $sql .= " ORDER BY id ASC"; break;
+                default: $sql .= " ORDER BY id DESC"; break;
+            }
+            $sql .= " LIMIT ? OFFSET ?";
+
             $stmt = $this->prepare($sql);
-            $kw = "%$keyword%";
-            $stmt->bind_param("sss", $kw, $kw, $kw);
+            if ($keyword !== '') {
+                $kw = "%$keyword%";
+                $stmt->bind_param("sssii", $kw, $kw, $kw, $limit, $offset);
+            } else {
+                $stmt->bind_param("ii", $limit, $offset);
+            }
             $stmt->execute();
             $result = $stmt->get_result();
             while ($row = $result->fetch_assoc()) {
@@ -145,3 +192,4 @@ class UserDAO extends BaseDAO
         return $res ? (int)$res->fetch_assoc()['total'] : 0;
     }
 }
+

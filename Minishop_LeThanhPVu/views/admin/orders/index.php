@@ -5,7 +5,23 @@ require_once __DIR__ . "/../../../dao/OrderDAO.php";
 $dao = new OrderDAO();
 
 $keyword = trim($_GET['keyword'] ?? '');
-$list = $dao->getAllWithJoin($keyword);
+$sort = trim($_GET['sort'] ?? 'default');
+$limit = max(1, (int)($_GET['limit'] ?? 10));
+$page = max(1, (int)($_GET['page'] ?? 1));
+$offset = ($page - 1) * $limit;
+
+$totalRecords = $dao->count("orders", "order_code", $keyword);
+$totalPages = (int)ceil($totalRecords / $limit);
+
+$list = $dao->getPage($limit, $offset, $keyword, $sort);
+
+$sortOptions = [
+    'default' => 'Mới nhất',
+    'code_asc' => 'Mã đơn A-Z',
+    'code_desc' => 'Mã đơn Z-A',
+    'amount_asc' => 'Tổng tiền tăng dần',
+    'amount_desc' => 'Tổng tiền giảm dần'
+];
 
 ob_start();
 ?>
@@ -13,18 +29,7 @@ ob_start();
     <h4 class="fw-bold">DANH SÁCH ĐƠN HÀNG</h4>
 </div>
 
-<!-- Form tìm kiếm đơn hàng -->
-<form method="GET" class="row g-2 mb-3">
-    <div class="col-md-4">
-        <input name="keyword" class="form-control" placeholder="Tìm theo mã đơn hoặc tên khách hàng..." value="<?= htmlspecialchars($keyword) ?>">
-    </div>
-    <div class="col-auto">
-        <button class="btn btn-outline-primary">Tìm kiếm</button>
-        <?php if ($keyword !== ''): ?>
-            <a href="index.php" class="btn btn-outline-secondary">Xóa lọc</a>
-        <?php endif; ?>
-    </div>
-</form>
+<?php include __DIR__ . "/../layouts/filter_bar.php"; ?>
 
 <table class="table table-bordered table-striped align-middle">
     <thead class="table-dark">
@@ -40,7 +45,7 @@ ob_start();
         </tr>
     </thead>
     <tbody>
-        <?php $stt = 1; foreach ($list as $o): ?>
+        <?php $stt = $offset + 1; foreach ($list as $o): ?>
         <tr>
             <td><?= $stt++ ?></td>
             <td class="fw-bold text-primary"><?= htmlspecialchars($o['order_code']) ?></td>
@@ -71,6 +76,10 @@ ob_start();
         <?php endif; ?>
     </tbody>
 </table>
+
+<?php include __DIR__ . "/../layouts/pagination.php"; ?>
+
+
 <?php
 $content = ob_get_clean();
 include __DIR__ . "/../layouts/master.php";

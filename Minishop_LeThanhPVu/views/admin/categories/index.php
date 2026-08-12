@@ -10,9 +10,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete') {
     exit;
 }
 
-// Tìm kiếm
+// Tìm kiếm & phân trang & sắp xếp
 $keyword = trim($_GET['keyword'] ?? '');
-$list = $dao->getAll($keyword);
+$sort = trim($_GET['sort'] ?? 'default');
+$limit = max(1, (int)($_GET['limit'] ?? 10));
+$page = max(1, (int)($_GET['page'] ?? 1));
+$offset = ($page - 1) * $limit;
+
+$totalRecords = $dao->count("categories", "catename", $keyword);
+$totalPages = (int)ceil($totalRecords / $limit);
+
+$list = $dao->getPage($limit, $offset, $keyword, $sort);
 
 ob_start();
 ?>
@@ -21,25 +29,14 @@ ob_start();
     <a href="create.php" class="btn btn-primary btn-sm">+ Thêm loại</a>
 </div>
 
-<!-- Form tìm kiếm -->
-<form method="GET" class="row g-2 mb-3">
-    <div class="col-md-4">
-        <input name="keyword" class="form-control" placeholder="Tìm theo tên hoặc slug..." value="<?= htmlspecialchars($keyword) ?>">
-    </div>
-    <div class="col-auto">
-        <button class="btn btn-outline-primary">Tìm kiếm</button>
-        <?php if ($keyword !== ''): ?>
-            <a href="index.php" class="btn btn-outline-secondary">Xóa lọc</a>
-        <?php endif; ?>
-    </div>
-</form>
+<?php include __DIR__ . "/../layouts/filter_bar.php"; ?>
 
 <table class="table table-bordered table-striped align-middle">
     <thead class="table-dark">
         <tr><th>STT</th><th>Hình ảnh</th><th>Tên loại</th><th>Slug</th><th>Trạng thái</th><th width="180">Thao tác</th></tr>
     </thead>
     <tbody>
-        <?php $stt = 1; foreach ($list as $c): ?>
+        <?php $stt = $offset + 1; foreach ($list as $c): ?>
         <tr>
             <td><?= $stt++ ?></td>
             <td>
@@ -60,10 +57,14 @@ ob_start();
         </tr>
         <?php endforeach; ?>
         <?php if (empty($list)): ?>
-        <tr><td colspan="5" class="text-center text-muted">Không tìm thấy kết quả</td></tr>
+        <tr><td colspan="6" class="text-center text-muted">Không tìm thấy danh mục nào</td></tr>
         <?php endif; ?>
     </tbody>
 </table>
+
+<?php include __DIR__ . "/../layouts/pagination.php"; ?>
+
+
 <?php
 $content = ob_get_clean();
 include __DIR__ . "/../layouts/master.php";

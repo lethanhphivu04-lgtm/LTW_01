@@ -148,34 +148,6 @@ class ProductDAO extends BaseDAO
         }
     }
 
-    // Lấy danh sách sản phẩm kèm tên danh mục + thương hiệu (JOIN), có tìm kiếm
-    public function getAllWithJoin(string $keyword = ''): array
-    {
-        $list = [];
-        try {
-            $sql = "SELECT p.*, c.catename, b.brandname 
-                    FROM products p 
-                    INNER JOIN categories c ON p.category_id = c.id 
-                    INNER JOIN brands b ON p.brand_id = b.id";
-            if ($keyword !== '') {
-                $sql .= " WHERE p.proname LIKE ? OR c.catename LIKE ? OR b.brandname LIKE ?";
-            }
-            $sql .= " ORDER BY p.id DESC";
-            $stmt = $this->prepare($sql);
-            if ($keyword !== '') {
-                $kw = "%$keyword%";
-                $stmt->bind_param("sss", $kw, $kw, $kw);
-            }
-            $stmt->execute();
-            $result = $stmt->get_result();
-            while ($row = $result->fetch_assoc()) {
-                $list[] = $row;
-            }
-        } catch (Exception $e) {
-            throw $e;
-        }
-        return $list;
-    }
 
     // Lấy 1 sản phẩm kèm tên danh mục + thương hiệu
     public function findByIdWithJoin(int $id): ?array
@@ -199,11 +171,68 @@ class ProductDAO extends BaseDAO
         return null;
     }
 
+    public function count(string $table = "products", string $column = "proname", string $keyword = ""): int
+    {
+        if ($keyword === '') {
+            return parent::count("products");
+        }
+        $sql = "SELECT COUNT(*) AS total 
+                FROM products p 
+                LEFT JOIN categories c ON p.category_id = c.id 
+                LEFT JOIN brands b ON p.brand_id = b.id 
+                WHERE p.proname LIKE ? OR c.catename LIKE ? OR b.brandname LIKE ?";
+        $stmt = $this->prepare($sql);
+        $kw = "%$keyword%";
+        $stmt->bind_param("sss", $kw, $kw, $kw);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        return (int)($row['total'] ?? 0);
+    }
+
+    public function getPage(int $limit, int $offset, string $keyword = '', string $sort = ''): array
+    {
+        $list = [];
+        try {
+            $sql = "SELECT p.*, c.catename, b.brandname 
+                    FROM products p 
+                    LEFT JOIN categories c ON p.category_id = c.id 
+                    LEFT JOIN brands b ON p.brand_id = b.id";
+            if ($keyword !== '') {
+                $sql .= " WHERE p.proname LIKE ? OR c.catename LIKE ? OR b.brandname LIKE ?";
+            }
+            switch ($sort) {
+                case 'name_asc': $sql .= " ORDER BY p.proname ASC"; break;
+                case 'name_desc': $sql .= " ORDER BY p.proname DESC"; break;
+                case 'price_asc': $sql .= " ORDER BY p.discount_price ASC"; break;
+                case 'price_desc': $sql .= " ORDER BY p.discount_price DESC"; break;
+                default: $sql .= " ORDER BY p.id DESC"; break;
+            }
+            $sql .= " LIMIT ? OFFSET ?";
+
+            $stmt = $this->prepare($sql);
+            if ($keyword !== '') {
+                $kw = "%$keyword%";
+                $stmt->bind_param("sssii", $kw, $kw, $kw, $limit, $offset);
+            } else {
+                $stmt->bind_param("ii", $limit, $offset);
+            }
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $list[] = $row;
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return $list;
+    }
+
     public function countAll(): int
     {
         $res = $this->executeQuery("SELECT COUNT(*) AS total FROM products");
         return $res ? (int)$res->fetch_assoc()['total'] : 0;
     }
+
 
     // Lấy 5 sản phẩm mới nhất cho Dashboard
     public function getNewest(int $limit = 5): array
