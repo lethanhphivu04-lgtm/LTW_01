@@ -1,5 +1,7 @@
 <?php
-require_once __DIR__ . "/../config/Database.php";
+namespace DAO;
+
+use Config\Database;
 
 class BaseDAO extends Database
 {
@@ -9,16 +11,15 @@ class BaseDAO extends Database
     }
 
     // Thực thi câu lệnh SELECT
-    protected function executeQuery(string $sql): mysqli_result|false
+    protected function executeQuery(string $sql): \mysqli_result|false
     {
         return $this->conn->query($sql);
     }
 
-    protected function prepare(string $sql): mysqli_stmt|false
+    protected function prepare(string $sql): \mysqli_stmt|false
     {
         return $this->conn->prepare($sql);
     }
-
 
     public function count(string $table, string $column = "", string $keyword = ""): int
     {
@@ -37,4 +38,3 @@ class BaseDAO extends Database
         return (int)($row["total"] ?? 0);
     }
 }
-

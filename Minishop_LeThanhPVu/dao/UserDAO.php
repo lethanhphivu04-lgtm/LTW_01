@@ -1,6 +1,7 @@
 <?php
-require_once __DIR__ . "/BaseDAO.php";
-require_once __DIR__ . "/../models/User.php";
+namespace DAO;
+
+use Models\User;
 
 class UserDAO extends BaseDAO
 {
@@ -38,7 +39,7 @@ class UserDAO extends BaseDAO
                     $list[] = $this->mapRow($row);
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -55,7 +56,7 @@ class UserDAO extends BaseDAO
             if ($row = $result->fetch_assoc()) {
                 return $this->mapRow($row);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return null;
@@ -72,14 +73,13 @@ class UserDAO extends BaseDAO
             if ($row = $result->fetch_assoc()) {
                 return $this->mapRow($row);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return null;
     }
 
     public function insert(User $u): bool
-
     {
         try {
             $sql = "INSERT INTO users(fullname, username, password, email, phone, address, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -96,7 +96,7 @@ class UserDAO extends BaseDAO
                 $u->status
             );
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
@@ -117,10 +117,9 @@ class UserDAO extends BaseDAO
                 $u->role,
                 $u->status,
                 $u->id
-                
             );
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
@@ -132,11 +131,10 @@ class UserDAO extends BaseDAO
             $stmt = $this->prepare($sql);
             $stmt->bind_param("i", $id);
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
-
 
     public function count(string $table = "users", string $column = "fullname", string $keyword = ""): int
     {
@@ -180,7 +178,7 @@ class UserDAO extends BaseDAO
             while ($row = $result->fetch_assoc()) {
                 $list[] = $this->mapRow($row);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -192,4 +190,3 @@ class UserDAO extends BaseDAO
         return $res ? (int)$res->fetch_assoc()['total'] : 0;
     }
 }
-

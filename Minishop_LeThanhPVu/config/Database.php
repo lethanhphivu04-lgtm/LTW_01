@@ -1,11 +1,13 @@
 <?php
+namespace Config;
+
 class Database
 {
     protected string $host = "localhost";
     protected string $database = "lethanhphivu_database";
     protected string $username = "root";
     protected string $password = "";
-    protected ?mysqli $conn = null;
+    protected ?\mysqli $conn = null;
 
     public function __construct()
     {
@@ -15,15 +17,15 @@ class Database
     // Kết nối cơ sở dữ liệu
     protected function connect(): void
     {
-        $this->conn = new mysqli($this->host, $this->username, $this->password, $this->database);
+        $this->conn = new \mysqli($this->host, $this->username, $this->password, $this->database);
         if ($this->conn->connect_errno) {
-            throw new Exception("Kết nối DB thất bại: " . $this->conn->connect_error);
+            throw new \Exception("Kết nối DB thất bại: " . $this->conn->connect_error);
         }
         $this->conn->set_charset("utf8mb4");
     }
 
     // Trả về đối tượng kết nối MySQLi
-    public function getConnection(): mysqli
+    public function getConnection(): \mysqli
     {
         return $this->conn;
     }

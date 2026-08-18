@@ -1,50 +1,21 @@
 <?php
-require_once __DIR__ . "/../../models/User.php";
-require_once __DIR__ . "/../../dao/UserDAO.php";
-require_once __DIR__ . "/../../middleware/GuestMiddleware.php";
-require_once __DIR__ . "/../../middleware/CsrfMiddleware.php";
-GuestMiddleware::handle();
-CsrfMiddleware::generateToken();
-
-$username = "";
-$password = "";
-$errors = [];
-
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    CsrfMiddleware::verify();
-    $username = trim($_POST["username"] ?? "");
-
-    $password = $_POST["password"] ?? "";
-
-    if ($username === "") {
-        $errors["username"] = "Vui lòng nhập tên đăng nhập.";
-    }
-    if ($password === "") {
-        $errors["password"] = "Vui lòng nhập mật khẩu.";
-    }
-
-    if (empty($errors)) {
-        $userDAO = new UserDAO();
-        $user = $userDAO->findByUsername($username);
-
-        if (!$user) {
-            $errors["username"] = "Tên đăng nhập không tồn tại.";
-        } elseif (!password_verify($password, $user->password)) {
-            $errors["password"] = "Mật khẩu không chính xác.";
-        } else {
-            $_SESSION["user"] = $user;
-            if (!empty($_POST["remember"])) {
-                $rememberToken = base64_encode($user->username . ":" . md5($user->username . "MINISHOP_SECRET_KEY"));
-                setcookie("remember_user", $rememberToken, time() + 7 * 24 * 3600, "/");
-            } else {
-                setcookie("remember_user", "", time() - 3600, "/");
-            }
-            header("Location: dashboard.php");
-            exit;
-        }
-
-    }
+if (!class_exists('Middleware\CsrfMiddleware')) {
+    require_once __DIR__ . "/../../autoload.php";
 }
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+\Middleware\CsrfMiddleware::generateToken();
+
+// Xác định base URL
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+$pos = strpos($scriptDir, '/views');
+$baseUrl = ($pos !== false) ? substr($scriptDir, 0, $pos) : $scriptDir;
+$baseUrl = rtrim($baseUrl, '/');
+if ($baseUrl === '') $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
+
+$username = $username ?? '';
+$errors = $errors ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -62,12 +33,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="card shadow border-0 rounded-3">
                     <div class="card-body p-4">
                         <h3 class="text-center mb-4 fw-bold text-primary">ĐĂNG NHẬP</h3>
-                        <form action="login.php" method="POST">
+
+                        <form action="<?= $baseUrl ?>/index.php?area=admin&controller=auth&action=login" method="POST">
                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Tên đăng nhập</label>
-                                <input type="text" name="username" class="form-control <?= isset($errors['username']) ? 'is-invalid' : '' ?>" placeholder="Nhập tên đăng nhập" value="<?= htmlspecialchars($username) ?>" required>
+                                <input type="text" id="usernameInput" name="username" class="form-control <?= isset($errors['username']) ? 'is-invalid' : '' ?>" placeholder="Nhập tên đăng nhập" value="<?= htmlspecialchars($username) ?>" required>
                                 <?php if (isset($errors["username"])): ?>
                                     <div class="invalid-feedback d-block"><?= htmlspecialchars($errors["username"]) ?></div>
                                 <?php endif; ?>
@@ -89,9 +61,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
                             </div>
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-primary fw-bold">Đăng nhập</button>
+                                <button type="submit" class="btn btn-primary fw-bold py-2">Đăng nhập</button>
                             </div>
                         </form>
+
+                        <hr class="my-4 text-muted">
+
+                        <!-- Dropdown tài khoản mẫu -->
+                        <div class="p-3 bg-light rounded border border-primary-subtle">
+                            <label for="sampleAccountSelect" class="form-label fw-semibold text-primary mb-1">
+                                <i class="bi bi-person-badge me-1"></i>Chọn tài khoản mẫu (Demo):
+                            </label>
+                            <select id="sampleAccountSelect" class="form-select border-primary">
+                                <option value="">-- Chọn tài khoản để điền tự động --</option>
+                                <option value="admin" data-password="123456">👑 Quản trị viên (admin / 123456)</option>
+                                <option value="nv_an" data-password="123456">👤 NV: Nguyễn Văn An (nv_an / 123456)</option>
+                                <option value="nv_bich" data-password="123456">👤 NV: Trần Thị Bích (nv_bich / 123456)</option>
+                                <option value="nv_cuong" data-password="123456">👤 NV: Phạm Minh Cường (nv_cuong / 123456)</option>
+                                <option value="nv_dung" data-password="123456">👤 NV: Hoàng Anh Dũng (nv_dung / 123456)</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -99,6 +88,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </div>
 
     <script>
+    document.getElementById('sampleAccountSelect')?.addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        const username = this.value;
+        const password = selected.getAttribute('data-password') || '';
+        
+        if (username) {
+            document.getElementById('usernameInput').value = username;
+            document.getElementById('passwordInput').value = password;
+        }
+    });
+
     document.getElementById('togglePassword')?.addEventListener('click', function() {
         const pwd = document.getElementById('passwordInput');
         const icon = document.getElementById('toggleIcon');
@@ -108,5 +108,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     });
     </script>
 </body>
-
 </html>

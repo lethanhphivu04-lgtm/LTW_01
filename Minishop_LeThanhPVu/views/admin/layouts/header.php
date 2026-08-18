@@ -1,18 +1,28 @@
 <?php
-require_once __DIR__ . "/../../../models/User.php";
-require_once __DIR__ . "/../../../middleware/AuthMiddleware.php";
-require_once __DIR__ . "/../../../middleware/CsrfMiddleware.php";
-AuthMiddleware::handle();
-CsrfMiddleware::generateToken();
+if (!class_exists('Middleware\CsrfMiddleware')) {
+    require_once __DIR__ . "/../../../autoload.php";
+}
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+\Middleware\CsrfMiddleware::generateToken();
 
-
-
-$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-$pos = strpos($scriptName, '/views/admin');
-$adminUrl = ($pos !== false) ? substr($scriptName, 0, $pos + 12) : '/LeThanhPhiVu_LTW_001/Minishop_LeThanhPVu/views/admin';
+// Xác định base URL của project
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+$pos = strpos($scriptDir, '/views');
+$baseUrl = ($pos !== false) ? substr($scriptDir, 0, $pos) : $scriptDir;
+$baseUrl = rtrim($baseUrl, '/');
+if ($baseUrl === '') $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
 
 $user = $_SESSION["user"] ?? null;
-$displayName = $user ? htmlspecialchars($user->fullname . ($user->role ? ' (Admin)' : ' (Nhân viên)')) : 'Chưa đăng nhập';
+if ($user instanceof \__PHP_Incomplete_Class || !is_object($user)) {
+    unset($_SESSION["user"]);
+    $user = null;
+}
+
+$displayName = ($user && isset($user->fullname)) 
+    ? htmlspecialchars($user->fullname . ((isset($user->role) && (int)$user->role === 1) ? ' (Admin)' : ' (Nhân viên)')) 
+    : 'Chưa đăng nhập';
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -32,7 +42,7 @@ $displayName = $user ? htmlspecialchars($user->fullname . ($user->role ? ' (Admi
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3 shadow-sm">
-    <a class="navbar-brand fw-bold text-primary" href="<?= $adminUrl ?>/dashboard.php"><i class="bi bi-cart-fill"></i> MINI SHOP</a>
+    <a class="navbar-brand fw-bold text-primary" href="<?= $baseUrl ?>/index.php?area=admin&controller=product&action=index"><i class="bi bi-cart-fill"></i> MINI SHOP</a>
     <div class="ms-auto d-flex align-items-center gap-3">
         <span class="navbar-text text-white mb-0"><i class="bi bi-person-circle fs-5 me-1"></i> <?= $displayName ?></span>
         <?php if ($user): ?>
@@ -57,11 +67,9 @@ $displayName = $user ? htmlspecialchars($user->fullname . ($user->role ? ' (Admi
       </div>
       <div class="modal-footer bg-light py-2">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
-        <a href="<?= $adminUrl ?>/logout.php" class="btn btn-danger btn-sm fw-bold">Đăng xuất</a>
+        <a href="<?= $baseUrl ?>/index.php?area=admin&controller=auth&action=logout" class="btn btn-danger btn-sm fw-bold">Đăng xuất</a>
       </div>
     </div>
   </div>
 </div>
 <?php endif; ?>
-
-

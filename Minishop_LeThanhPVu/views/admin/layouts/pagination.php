@@ -5,6 +5,9 @@
 if ($totalPages > 1): 
     $queryString = function($p) use ($limit, $keyword, $sort) {
         return '?' . http_build_query([
+            'area' => $_GET['area'] ?? 'admin',
+            'controller' => $_GET['controller'] ?? 'product',
+            'action' => $_GET['action'] ?? 'index',
             'limit' => $limit,
             'keyword' => $keyword,
             'sort' => $sort,

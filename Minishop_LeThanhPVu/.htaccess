@@ -1,0 +1,9 @@
+RewriteEngine On
+RewriteBase /LTW_01/Minishop_LeThanhPVu/
+
+# Không rewrite file và thư mục có thật (assets, css, js, uploads,...)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Đưa mọi request về Entry Point index.php
+RewriteRule ^ index.php [QSA,L]

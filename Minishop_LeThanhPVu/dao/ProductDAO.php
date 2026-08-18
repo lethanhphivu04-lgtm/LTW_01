@@ -1,6 +1,7 @@
 <?php
-require_once __DIR__ . "/BaseDAO.php";
-require_once __DIR__ . "/../models/Product.php";
+namespace DAO;
+
+use Models\Product;
 
 class ProductDAO extends BaseDAO
 {
@@ -40,7 +41,7 @@ class ProductDAO extends BaseDAO
                     $list[] = $this->mapRow($row);
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -57,7 +58,7 @@ class ProductDAO extends BaseDAO
             if ($row = $result->fetch_assoc()) {
                 return $this->mapRow($row);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return null;
@@ -82,7 +83,7 @@ class ProductDAO extends BaseDAO
                 $p->status
             );
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
@@ -107,47 +108,22 @@ class ProductDAO extends BaseDAO
                 $p->id
             );
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
 
     public function delete(int $id): bool
     {
-        // $this->beginTransaction();
-        // try {
-        //     // 1. Xóa hình ảnh sản phẩm (product_images)
-        //     $stmt1 = $this->prepare("DELETE FROM product_images WHERE product_id = ?");
-        //     $stmt1->bind_param("i", $id);
-        //     $stmt1->execute();
-        //
-        //     // 2. Xóa các chi tiết đơn hàng chứa sản phẩm này (order_details)
-        //     $stmt2 = $this->prepare("DELETE FROM order_details WHERE product_id = ?");
-        //     $stmt2->bind_param("i", $id);
-        //     $stmt2->execute();
-        //
-        //     // 3. Xóa sản phẩm
-        //     $stmt3 = $this->prepare("DELETE FROM products WHERE id = ?");
-        //     $stmt3->bind_param("i", $id);
-        //     $res = $stmt3->execute();
-        //
-        //     $this->commit();
-        //     return $res;
-        // } catch (Exception $e) {
-        //     $this->rollback();
-        //     throw $e;
-        // }
-
         try {
             $sql = "DELETE FROM products WHERE id=?";
             $stmt = $this->prepare($sql);
             $stmt->bind_param("i", $id);
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
-
 
     // Lấy 1 sản phẩm kèm tên danh mục + thương hiệu
     public function findByIdWithJoin(int $id): ?array
@@ -165,7 +141,7 @@ class ProductDAO extends BaseDAO
             if ($row = $result->fetch_assoc()) {
                 return $row;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return null;
@@ -221,7 +197,7 @@ class ProductDAO extends BaseDAO
             while ($row = $result->fetch_assoc()) {
                 $list[] = $row;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -232,7 +208,6 @@ class ProductDAO extends BaseDAO
         $res = $this->executeQuery("SELECT COUNT(*) AS total FROM products");
         return $res ? (int)$res->fetch_assoc()['total'] : 0;
     }
-
 
     // Lấy 5 sản phẩm mới nhất cho Dashboard
     public function getNewest(int $limit = 5): array
@@ -252,7 +227,7 @@ class ProductDAO extends BaseDAO
                 $row['brand_name'] = $row['brandname'] ?? '';
                 $list[] = $row;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -266,7 +241,7 @@ class ProductDAO extends BaseDAO
             $stmt = $this->prepare($sql);
             $stmt->bind_param("is", $productId, $image);
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
@@ -284,7 +259,7 @@ class ProductDAO extends BaseDAO
             while ($row = $result->fetch_assoc()) {
                 $list[] = $row;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -300,7 +275,7 @@ class ProductDAO extends BaseDAO
             $stmtSelect->execute();
             $res = $stmtSelect->get_result();
             if ($row = $res->fetch_assoc()) {
-                $filePath = __DIR__ . "/../../../uploads/products/" . $row['image'];
+                $filePath = __DIR__ . "/../uploads/products/" . $row['image'];
                 if (file_exists($filePath)) {
                     unlink($filePath);
                 }
@@ -310,7 +285,7 @@ class ProductDAO extends BaseDAO
             $stmtDelete = $this->prepare($sqlDelete);
             $stmtDelete->bind_param("i", $id);
             return $stmtDelete->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }

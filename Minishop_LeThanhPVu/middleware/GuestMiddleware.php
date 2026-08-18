@@ -1,4 +1,6 @@
 <?php
+namespace Middleware;
+
 class GuestMiddleware
 {
     public static function handle()
@@ -7,7 +9,7 @@ class GuestMiddleware
             session_start();
         }
         if (isset($_SESSION["user"])) {
-            header("Location: dashboard.php");
+            header("Location: index.php?area=admin&controller=product&action=index");
             exit;
         }
     }

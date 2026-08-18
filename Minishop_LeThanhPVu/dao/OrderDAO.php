@@ -1,6 +1,8 @@
 <?php
-require_once __DIR__ . "/BaseDAO.php";
-require_once __DIR__ . "/../models/Order.php";
+namespace DAO;
+
+use Models\Order;
+use Models\OrderDetail;
 
 class OrderDAO extends BaseDAO
 {
@@ -36,7 +38,7 @@ class OrderDAO extends BaseDAO
                     $list[] = $this->mapRow($row);
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -53,7 +55,7 @@ class OrderDAO extends BaseDAO
             if ($row = $result->fetch_assoc()) {
                 return $this->mapRow($row);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return null;
@@ -74,7 +76,7 @@ class OrderDAO extends BaseDAO
                 $o->status
             );
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
@@ -95,38 +97,19 @@ class OrderDAO extends BaseDAO
                 $o->id
             );
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
 
     public function delete(int $id): bool
     {
-        // $this->beginTransaction();
-        // try {
-        //     // 1. Xóa các chi tiết đơn hàng (order_details) thuộc đơn này
-        //     $stmt1 = $this->prepare("DELETE FROM order_details WHERE order_id = ?");
-        //     $stmt1->bind_param("i", $id);
-        //     $stmt1->execute();
-        //
-        //     // 2. Xóa đơn hàng
-        //     $stmt2 = $this->prepare("DELETE FROM orders WHERE id = ?");
-        //     $stmt2->bind_param("i", $id);
-        //     $res = $stmt2->execute();
-        //
-        //     $this->commit();
-        //     return $res;
-        // } catch (Exception $e) {
-        //     $this->rollback();
-        //     throw $e;
-        // }
-
         try {
             $sql = "DELETE FROM orders WHERE id=?";
             $stmt = $this->prepare($sql);
             $stmt->bind_param("i", $id);
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
@@ -152,7 +135,7 @@ class OrderDAO extends BaseDAO
             while ($row = $result->fetch_assoc()) {
                 $list[] = $row;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -207,12 +190,11 @@ class OrderDAO extends BaseDAO
             while ($row = $result->fetch_assoc()) {
                 $list[] = $row;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
     }
-
 
     // Lấy 1 đơn hàng kèm tên khách hàng + nhân viên
     public function findByIdWithJoin(int $id): ?array
@@ -230,7 +212,7 @@ class OrderDAO extends BaseDAO
             if ($row = $result->fetch_assoc()) {
                 return $row;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return null;
@@ -252,7 +234,7 @@ class OrderDAO extends BaseDAO
             while ($row = $result->fetch_assoc()) {
                 $list[] = $row;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -266,7 +248,7 @@ class OrderDAO extends BaseDAO
             $stmt = $this->prepare($sql);
             $stmt->bind_param("ii", $status, $id);
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }

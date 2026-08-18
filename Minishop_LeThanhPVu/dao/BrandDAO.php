@@ -1,6 +1,7 @@
 <?php
-require_once __DIR__ . "/BaseDAO.php";
-require_once __DIR__ . "/../models/Brand.php";
+namespace DAO;
+
+use Models\Brand;
 
 class BrandDAO extends BaseDAO
 {
@@ -35,7 +36,7 @@ class BrandDAO extends BaseDAO
                     $list[] = $this->mapRow($row);
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -52,7 +53,7 @@ class BrandDAO extends BaseDAO
             if ($row = $result->fetch_assoc()) {
                 return $this->mapRow($row);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return null;
@@ -72,7 +73,7 @@ class BrandDAO extends BaseDAO
                 $brand->status
             );
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
@@ -92,51 +93,22 @@ class BrandDAO extends BaseDAO
                 $brand->id
             );
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
 
     public function delete(int $id): bool
     {
-        // $this->beginTransaction();
-        // try {
-        //     // 1. Xóa hình ảnh & chi tiết đơn hàng của sản phẩm thuộc thương hiệu này
-        //     $stmt1 = $this->prepare("DELETE FROM product_images WHERE product_id IN (SELECT id FROM products WHERE brand_id = ?)");
-        //     $stmt1->bind_param("i", $id);
-        //     $stmt1->execute();
-        //
-        //     $stmt2 = $this->prepare("DELETE FROM order_details WHERE product_id IN (SELECT id FROM products WHERE brand_id = ?)");
-        //     $stmt2->bind_param("i", $id);
-        //     $stmt2->execute();
-        //
-        //     // 2. Xóa sản phẩm thuộc thương hiệu này
-        //     $stmt3 = $this->prepare("DELETE FROM products WHERE brand_id = ?");
-        //     $stmt3->bind_param("i", $id);
-        //     $stmt3->execute();
-        //
-        //     // 3. Xóa thương hiệu cha
-        //     $stmt4 = $this->prepare("DELETE FROM brands WHERE id = ?");
-        //     $stmt4->bind_param("i", $id);
-        //     $res = $stmt4->execute();
-        //
-        //     $this->commit();
-        //     return $res;
-        // } catch (Exception $e) {
-        //     $this->rollback();
-        //     throw $e;
-        // }
-
         try {
             $sql = "DELETE FROM brands WHERE id=?";
             $stmt = $this->prepare($sql);
             $stmt->bind_param("i", $id);
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
-
 
     public function count(string $table = "brands", string $column = "brandname", string $keyword = ""): int
     {
@@ -180,7 +152,7 @@ class BrandDAO extends BaseDAO
             while ($row = $result->fetch_assoc()) {
                 $list[] = $this->mapRow($row);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -192,4 +164,3 @@ class BrandDAO extends BaseDAO
         return $res ? (int)$res->fetch_assoc()['total'] : 0;
     }
 }
-

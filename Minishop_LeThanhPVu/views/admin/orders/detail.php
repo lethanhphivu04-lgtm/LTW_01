@@ -1,28 +1,11 @@
 <?php
-$pageTitle = "Chi tiết đơn hàng";
-require_once __DIR__ . "/../../../dao/OrderDAO.php";
-
-$dao = new OrderDAO();
-$id = (int)($_GET['id'] ?? 0);
-
-// Xử lý cập nhật trạng thái đơn hàng
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['update_status'])) {
-    $status = (int)$_POST['status'];
-    $dao->updateStatus($id, $status);
-    header("Location: detail.php?id=" . $id);
-    exit;
-}
-
-$order = $dao->findByIdWithJoin($id);
-if (!$order) { header("Location: index.php"); exit; }
-
-$details = $dao->getOrderDetails($id);
-
+$pageTitle = $pageTitle ?? "Chi tiết đơn hàng";
+$id = $order['id'] ?? 0;
 ob_start();
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="fw-bold">CHI TIẾT ĐƠN HÀNG: <span class="text-primary">#<?= htmlspecialchars($order['order_code']) ?></span></h4>
-    <a href="index.php" class="btn btn-secondary btn-sm">Quay lại danh sách</a>
+    <a href="index.php?area=admin&controller=order&action=index" class="btn btn-secondary btn-sm">Quay lại danh sách</a>
 </div>
 
 <div class="row g-3 mb-4">
@@ -70,7 +53,7 @@ ob_start();
 <div class="card mb-4">
     <div class="card-header bg-secondary text-white fw-bold">Cập nhật trạng thái đơn hàng</div>
     <div class="card-body">
-        <form method="POST" class="row g-2 align-items-center">
+        <form method="POST" action="index.php?area=admin&controller=order&action=detail&id=<?= $id ?>" class="row g-2 align-items-center">
             <input type="hidden" name="update_status" value="1">
             <div class="col-md-6">
                 <select name="status" class="form-select">
@@ -82,7 +65,7 @@ ob_start();
                 </select>
             </div>
             <div class="col-auto">
-                <button class="btn btn-success">Cập nhật trạng thái</button>
+                <button class="btn btn-success" type="submit">Cập nhật trạng thái</button>
             </div>
         </form>
     </div>

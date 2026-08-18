@@ -1,6 +1,7 @@
 <?php
-require_once __DIR__ . "/BaseDAO.php";
-require_once __DIR__ . "/../models/Customer.php";
+namespace DAO;
+
+use Models\Customer;
 
 class CustomerDAO extends BaseDAO
 {
@@ -36,7 +37,7 @@ class CustomerDAO extends BaseDAO
                     $list[] = $this->mapRow($row);
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -53,7 +54,7 @@ class CustomerDAO extends BaseDAO
             if ($row = $result->fetch_assoc()) {
                 return $this->mapRow($row);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return null;
@@ -74,7 +75,7 @@ class CustomerDAO extends BaseDAO
                 $c->status
             );
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
@@ -95,47 +96,22 @@ class CustomerDAO extends BaseDAO
                 $c->id
             );
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
 
     public function delete(int $id): bool
     {
-        // $this->beginTransaction();
-        // try {
-        //     // 1. Xóa chi tiết các đơn hàng thuộc khách hàng này
-        //     $stmt1 = $this->prepare("DELETE FROM order_details WHERE order_id IN (SELECT id FROM orders WHERE customer_id = ?)");
-        //     $stmt1->bind_param("i", $id);
-        //     $stmt1->execute();
-        //
-        //     // 2. Xóa các đơn hàng của khách hàng này
-        //     $stmt2 = $this->prepare("DELETE FROM orders WHERE customer_id = ?");
-        //     $stmt2->bind_param("i", $id);
-        //     $stmt2->execute();
-        //
-        //     // 3. Xóa khách hàng
-        //     $stmt3 = $this->prepare("DELETE FROM customers WHERE id = ?");
-        //     $stmt3->bind_param("i", $id);
-        //     $res = $stmt3->execute();
-        //
-        //     $this->commit();
-        //     return $res;
-        // } catch (Exception $e) {
-        //     $this->rollback();
-        //     throw $e;
-        // }
-
         try {
             $sql = "DELETE FROM customers WHERE id=?";
             $stmt = $this->prepare($sql);
             $stmt->bind_param("i", $id);
             return $stmt->execute();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
     }
-
 
     public function count(string $table = "customers", string $column = "fullname", string $keyword = ""): int
     {
@@ -179,7 +155,7 @@ class CustomerDAO extends BaseDAO
             while ($row = $result->fetch_assoc()) {
                 $list[] = $this->mapRow($row);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw $e;
         }
         return $list;
@@ -191,4 +167,3 @@ class CustomerDAO extends BaseDAO
         return $res ? (int)$res->fetch_assoc()['total'] : 0;
     }
 }
-

@@ -1,10 +1,5 @@
 <?php
-$pageTitle = "Chi tiết thương hiệu";
-require_once __DIR__ . "/../../../dao/BrandDAO.php";
-$dao = new BrandDAO();
-$id = (int)($_GET['id'] ?? 0);
-$brand = $dao->findById($id);
-if (!$brand) { header("Location: index.php"); exit; }
+$pageTitle = $pageTitle ?? "Chi tiết thương hiệu";
 ob_start();
 ?>
 <h4 class="fw-bold mb-3">CHI TIẾT THƯƠNG HIỆU</h4>
@@ -15,7 +10,7 @@ ob_start();
             <th>Hình ảnh</th>
             <td>
                 <?php if (!empty($brand->image)) { ?>
-                    <img src="../../../uploads/brands/<?= $brand->image ?>" alt="<?= htmlspecialchars($brand->name) ?>" class="img-thumbnail" width="150">
+                    <img src="uploads/brands/<?= $brand->image ?>" alt="<?= htmlspecialchars($brand->name) ?>" class="img-thumbnail" width="150">
                 <?php } else { ?>
                     <span class="text-muted">No Image</span>
                 <?php } ?>
@@ -29,5 +24,8 @@ ob_start();
         <tr><th>Cập nhật</th><td><?= $brand->updatedAt ?></td></tr>
     </table>
 </div>
-<div class="mt-3"><a href="edit.php?id=<?= $brand->id ?>" class="btn btn-warning">Sửa</a> <a href="index.php" class="btn btn-secondary">Quay lại</a></div>
+<div class="mt-3">
+    <a href="index.php?area=admin&controller=brand&action=edit&id=<?= $brand->id ?>" class="btn btn-warning">Sửa</a>
+    <a href="index.php?area=admin&controller=brand&action=index" class="btn btn-secondary">Quay lại</a>
+</div>
 <?php $content = ob_get_clean(); include __DIR__ . "/../layouts/master.php"; ?>

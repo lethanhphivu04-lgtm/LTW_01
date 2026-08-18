@@ -1,33 +1,31 @@
 <?php
-$pageTitle = "Dashboard - Quản trị hệ thống";
+if (!isset($totalCategory)) {
+    if (!class_exists('DAO\CategoryDAO')) {
+        require_once __DIR__ . "/../../autoload.php";
+    }
+    $categoryDAO = new \DAO\CategoryDAO();
+    $brandDAO = new \DAO\BrandDAO();
+    $productDAO = new \DAO\ProductDAO();
+    $customerDAO = new \DAO\CustomerDAO();
+    $orderDAO = new \DAO\OrderDAO();
 
-require_once __DIR__ . "/../../dao/CategoryDAO.php";
-require_once __DIR__ . "/../../dao/BrandDAO.php";
-require_once __DIR__ . "/../../dao/ProductDAO.php";
-require_once __DIR__ . "/../../dao/CustomerDAO.php";
-require_once __DIR__ . "/../../dao/OrderDAO.php";
+    $totalCategory = $categoryDAO->countAll();
+    $totalBrand = $brandDAO->countAll();
+    $totalProduct = $productDAO->countAll();
+    $totalCustomer = $customerDAO->countAll();
+    $totalOrder = $orderDAO->countAll();
 
-// Khởi tạo các đối tượng DAO
-$categoryDAO = new CategoryDAO();
-$brandDAO = new BrandDAO();
-$productDAO = new ProductDAO();
-$customerDAO = new CustomerDAO();
-$orderDAO = new OrderDAO();
+    $newestProducts = $productDAO->getNewest(5);
+    $newestOrders = $orderDAO->getNewest(5);
+}
 
-// Lấy số liệu thống kê cho Dashboard
-$totalCategory = $categoryDAO->countAll();
-$totalBrand = $brandDAO->countAll();
-$totalProduct = $productDAO->countAll();
-$totalCustomer = $customerDAO->countAll();
-$totalOrder = $orderDAO->countAll();
+$pageTitle = $pageTitle ?? "Dashboard - Quản trị hệ thống";
 
-// Lấy 5 sản phẩm mới nhất và 5 đơn hàng mới nhất
-$newestProducts = $productDAO->getNewest(5);
-$newestOrders = $orderDAO->getNewest(5);
-
-$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-$pos = strpos($scriptName, '/views/admin');
-$adminUrl = ($pos !== false) ? substr($scriptName, 0, $pos + 12) : '/LeThanhPhiVu_LTW_001/Minishop_LeThanhPVu/views/admin';
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+$pos = strpos($scriptDir, '/views');
+$baseUrl = ($pos !== false) ? substr($scriptDir, 0, $pos) : $scriptDir;
+$baseUrl = rtrim($baseUrl, '/');
+if ($baseUrl === '') $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
 
 ob_start();
 ?>
@@ -45,11 +43,11 @@ ob_start();
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <div class="fs-6 text-white-50">Danh mục</div>
-                    <div class="fs-3 fw-bold"><?= $totalCategory ?></div>
+                    <div class="fs-3 fw-bold"><?= $totalCategory ?? 0 ?></div>
                 </div>
                 <i class="bi bi-folder fs-1 text-white-50"></i>
             </div>
-            <a href="<?= $adminUrl ?>/categories/index.php" class="text-white text-decoration-none small mt-2 d-block">Xem chi tiết &rarr;</a>
+            <a href="<?= $baseUrl ?>/index.php?area=admin&controller=category&action=index" class="text-white text-decoration-none small mt-2 d-block">Xem chi tiết &rarr;</a>
         </div>
     </div>
     <div class="col">
@@ -57,11 +55,11 @@ ob_start();
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <div class="fs-6 text-white-50">Thương hiệu</div>
-                    <div class="fs-3 fw-bold"><?= $totalBrand ?></div>
+                    <div class="fs-3 fw-bold"><?= $totalBrand ?? 0 ?></div>
                 </div>
                 <i class="bi bi-tag fs-1 text-white-50"></i>
             </div>
-            <a href="<?= $adminUrl ?>/brands/index.php" class="text-white text-decoration-none small mt-2 d-block">Xem chi tiết &rarr;</a>
+            <a href="<?= $baseUrl ?>/index.php?area=admin&controller=brand&action=index" class="text-white text-decoration-none small mt-2 d-block">Xem chi tiết &rarr;</a>
         </div>
     </div>
     <div class="col">
@@ -69,11 +67,11 @@ ob_start();
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <div class="fs-6 text-white-50">Sản phẩm</div>
-                    <div class="fs-3 fw-bold"><?= $totalProduct ?></div>
+                    <div class="fs-3 fw-bold"><?= $totalProduct ?? 0 ?></div>
                 </div>
                 <i class="bi bi-box-seam fs-1 text-white-50"></i>
             </div>
-            <a href="<?= $adminUrl ?>/products/index.php" class="text-white text-decoration-none small mt-2 d-block">Xem chi tiết &rarr;</a>
+            <a href="<?= $baseUrl ?>/index.php?area=admin&controller=product&action=index" class="text-white text-decoration-none small mt-2 d-block">Xem chi tiết &rarr;</a>
         </div>
     </div>
     <div class="col">
@@ -81,11 +79,11 @@ ob_start();
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <div class="fs-6 text-black-50">Khách hàng</div>
-                    <div class="fs-3 fw-bold"><?= $totalCustomer ?></div>
+                    <div class="fs-3 fw-bold"><?= $totalCustomer ?? 0 ?></div>
                 </div>
                 <i class="bi bi-people fs-1 text-black-50"></i>
             </div>
-            <a href="<?= $adminUrl ?>/customers/index.php" class="text-dark text-decoration-none small mt-2 d-block">Xem chi tiết &rarr;</a>
+            <a href="<?= $baseUrl ?>/index.php?area=admin&controller=customer&action=index" class="text-dark text-decoration-none small mt-2 d-block">Xem chi tiết &rarr;</a>
         </div>
     </div>
     <div class="col">
@@ -93,11 +91,11 @@ ob_start();
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <div class="fs-6 text-white-50">Đơn hàng</div>
-                    <div class="fs-3 fw-bold"><?= $totalOrder ?></div>
+                    <div class="fs-3 fw-bold"><?= $totalOrder ?? 0 ?></div>
                 </div>
                 <i class="bi bi-receipt fs-1 text-white-50"></i>
             </div>
-            <a href="<?= $adminUrl ?>/orders/index.php" class="text-white text-decoration-none small mt-2 d-block">Xem chi tiết &rarr;</a>
+            <a href="<?= $baseUrl ?>/index.php?area=admin&controller=order&action=index" class="text-white text-decoration-none small mt-2 d-block">Xem chi tiết &rarr;</a>
         </div>
     </div>
 </div>
@@ -188,5 +186,5 @@ ob_start();
 
 <?php
 $content = ob_get_clean();
-include "layouts/master.php";
+include __DIR__ . "/layouts/master.php";
 ?>

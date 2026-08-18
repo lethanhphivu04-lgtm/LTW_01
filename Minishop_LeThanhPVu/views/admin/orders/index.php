@@ -1,28 +1,5 @@
 <?php
-$pageTitle = "Danh sách đơn hàng";
-require_once __DIR__ . "/../../../dao/OrderDAO.php";
-
-$dao = new OrderDAO();
-
-$keyword = trim($_GET['keyword'] ?? '');
-$sort = trim($_GET['sort'] ?? 'default');
-$limit = max(1, (int)($_GET['limit'] ?? 10));
-$page = max(1, (int)($_GET['page'] ?? 1));
-$offset = ($page - 1) * $limit;
-
-$totalRecords = $dao->count("orders", "order_code", $keyword);
-$totalPages = (int)ceil($totalRecords / $limit);
-
-$list = $dao->getPage($limit, $offset, $keyword, $sort);
-
-$sortOptions = [
-    'default' => 'Mới nhất',
-    'code_asc' => 'Mã đơn A-Z',
-    'code_desc' => 'Mã đơn Z-A',
-    'amount_asc' => 'Tổng tiền tăng dần',
-    'amount_desc' => 'Tổng tiền giảm dần'
-];
-
+$pageTitle = $pageTitle ?? "Danh sách đơn hàng";
 ob_start();
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -45,7 +22,7 @@ ob_start();
         </tr>
     </thead>
     <tbody>
-        <?php $stt = $offset + 1; foreach ($list as $o): ?>
+        <?php $stt = ($offset ?? 0) + 1; foreach ($list as $o): ?>
         <tr>
             <td><?= $stt++ ?></td>
             <td class="fw-bold text-primary"><?= htmlspecialchars($o['order_code']) ?></td>
@@ -67,7 +44,7 @@ ob_start();
                 <?php endif; ?>
             </td>
             <td>
-                <a href="detail.php?id=<?= $o['id'] ?>" class="btn btn-info btn-sm text-white">Chi tiết / Xử lý</a>
+                <a href="index.php?area=admin&controller=order&action=detail&id=<?= $o['id'] ?>" class="btn btn-info btn-sm text-white">Chi tiết / Xử lý</a>
             </td>
         </tr>
         <?php endforeach; ?>
@@ -78,7 +55,6 @@ ob_start();
 </table>
 
 <?php include __DIR__ . "/../layouts/pagination.php"; ?>
-
 
 <?php
 $content = ob_get_clean();

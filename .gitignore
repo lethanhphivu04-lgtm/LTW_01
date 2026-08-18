@@ -1,0 +1,11 @@
+# Agent files
+.agents/
+AGENTS.md
+
+# Lab PDF files
+*.pdf
+LTW1_Lab11.pdf
+LTW1_Lab12.pdf
+
+# Office temporary files
+~$*.docx

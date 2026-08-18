@@ -1,4 +1,6 @@
 <?php
+namespace Models;
+
 class OrderDetail
 {
     public int $id;
