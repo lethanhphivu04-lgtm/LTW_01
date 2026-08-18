@@ -18,14 +18,14 @@ $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
     <title><?= htmlspecialchars($pageTitle ?? 'MiniShop') ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= $baseUrl ?>/assets/client/style.css">
+    <link rel="stylesheet" href="<?= $baseUrl ?>/assets/client/style.css?v=<?= time() ?>">
     <script>
         window.BASE_URL = '<?= $baseUrl ?>';
     </script>
 </head>
 <body>
 <!-- Top Bar -->
-<div class="top-bar py-1">
+<div class="top-bar py-1" style="background-color: #090d16 !important; color: #94a3b8 !important; border-bottom: 1px solid rgba(255,255,255,0.08);">
     <div class="container d-flex justify-content-between align-items-center small">
         <span><i class="bi bi-telephone me-1"></i> Hotline: 0123-456-789</span>
         <span><i class="bi bi-shield-check me-1"></i> Sản phẩm chính hãng 100% | Bảo hành 12 tháng</span>
@@ -33,10 +33,10 @@ $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
 </div>
 
 <!-- Header / Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark main-navbar sticky-top">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background-color: #0f172a !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
     <div class="container">
-        <a class="navbar-brand fs-4" href="<?= $baseUrl ?>">
-            <i class="bi bi-cpu me-2"></i>MINI<span>SHOP</span>
+        <a class="navbar-brand fs-4 text-white fw-bold" href="<?= $baseUrl ?>">
+            <i class="bi bi-cpu me-2"></i>MINI<span style="color: #94a3b8;">SHOP</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
             <span class="navbar-toggler-icon"></span>
