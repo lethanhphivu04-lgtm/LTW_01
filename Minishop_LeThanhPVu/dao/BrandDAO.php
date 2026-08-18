@@ -157,4 +157,26 @@ class BrandDAO extends BaseDAO
     {
         return $this->count("brands");
     }
+
+    public function getByLimit(int $limit = 5): array
+    {
+        $list = [];
+        $stmt = $this->prepare("SELECT * FROM brands WHERE status = 1 ORDER BY id DESC LIMIT ?");
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $list[] = $this->mapRow($row);
+        }
+        return $list;
+    }
+
+    public function findBySlug(string $slug): ?Brand
+    {
+        $stmt = $this->prepare("SELECT * FROM brands WHERE slug = ? AND status = 1 LIMIT 1");
+        $stmt->bind_param("s", $slug);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        return $row ? $this->mapRow($row) : null;
+    }
 }

@@ -283,4 +283,120 @@ class ProductDAO extends BaseDAO
             throw $e;
         }
     }
+
+    // --- Client methods ---
+
+    private string $clientSelect = "SELECT p.*, c.catename AS category_name, c.slug AS category_slug, b.brandname AS brand_name, b.slug AS brand_slug
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        LEFT JOIN brands b ON p.brand_id = b.id
+        WHERE p.status = 1";
+
+    public function getByCategorySlug(string $slug, int $limit = 12, int $offset = 0): array
+    {
+        $list = [];
+        $stmt = $this->prepare($this->clientSelect . " AND c.slug = ? ORDER BY p.id DESC LIMIT ? OFFSET ?");
+        $stmt->bind_param("sii", $slug, $limit, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) $list[] = $row;
+        return $list;
+    }
+
+    public function countByCategorySlug(string $slug): int
+    {
+        $stmt = $this->prepare("SELECT COUNT(*) AS total FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.status = 1 AND c.slug = ?");
+        $stmt->bind_param("s", $slug);
+        $stmt->execute();
+        return (int)$stmt->get_result()->fetch_assoc()['total'];
+    }
+
+    public function getByBrandSlug(string $slug, int $limit = 12, int $offset = 0): array
+    {
+        $list = [];
+        $stmt = $this->prepare($this->clientSelect . " AND b.slug = ? ORDER BY p.id DESC LIMIT ? OFFSET ?");
+        $stmt->bind_param("sii", $slug, $limit, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) $list[] = $row;
+        return $list;
+    }
+
+    public function countByBrandSlug(string $slug): int
+    {
+        $stmt = $this->prepare("SELECT COUNT(*) AS total FROM products p LEFT JOIN brands b ON p.brand_id = b.id WHERE p.status = 1 AND b.slug = ?");
+        $stmt->bind_param("s", $slug);
+        $stmt->execute();
+        return (int)$stmt->get_result()->fetch_assoc()['total'];
+    }
+
+    public function findBySlug(string $slug): ?array
+    {
+        $stmt = $this->prepare($this->clientSelect . " AND p.slug = ? LIMIT 1");
+        $stmt->bind_param("s", $slug);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        return $row ?: null;
+    }
+
+    public function search(string $keyword, int $limit = 12, int $offset = 0): array
+    {
+        $list = [];
+        $kw = "%$keyword%";
+        $stmt = $this->prepare($this->clientSelect . " AND (p.proname LIKE ? OR p.description LIKE ?) ORDER BY p.id DESC LIMIT ? OFFSET ?");
+        $stmt->bind_param("ssii", $kw, $kw, $limit, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) $list[] = $row;
+        return $list;
+    }
+
+    public function countSearch(string $keyword): int
+    {
+        $kw = "%$keyword%";
+        $stmt = $this->prepare("SELECT COUNT(*) AS total FROM products p WHERE p.status = 1 AND (p.proname LIKE ? OR p.description LIKE ?)");
+        $stmt->bind_param("ss", $kw, $kw);
+        $stmt->execute();
+        return (int)$stmt->get_result()->fetch_assoc()['total'];
+    }
+
+    public function getDiscounted(int $limit = 8): array
+    {
+        $list = [];
+        $stmt = $this->prepare($this->clientSelect . " AND p.discount_price < p.price AND p.discount_price > 0 ORDER BY (p.price - p.discount_price) DESC LIMIT ?");
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) $list[] = $row;
+        return $list;
+    }
+
+    public function getNewestClient(int $limit = 8): array
+    {
+        $list = [];
+        $stmt = $this->prepare($this->clientSelect . " ORDER BY p.id DESC LIMIT ?");
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) $list[] = $row;
+        return $list;
+    }
+
+    public function getAllClient(int $limit = 12, int $offset = 0): array
+    {
+        $list = [];
+        $stmt = $this->prepare($this->clientSelect . " ORDER BY p.id DESC LIMIT ? OFFSET ?");
+        $stmt->bind_param("ii", $limit, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) $list[] = $row;
+        return $list;
+    }
+
+    public function countAllClient(): int
+    {
+        $res = $this->executeQuery("SELECT COUNT(*) AS total FROM products WHERE status = 1");
+        return $res ? (int)$res->fetch_assoc()['total'] : 0;
+    }
 }
+

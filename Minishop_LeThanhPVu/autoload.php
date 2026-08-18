@@ -14,6 +14,7 @@ spl_autoload_register(function ($className) {
 
     $prefixes = [
         'Controllers\\' => __DIR__ . '/controllers/',
+        'Composers\\'   => __DIR__ . '/composers/',
         'DAO\\'         => __DIR__ . '/dao/',
         'Models\\'      => __DIR__ . '/models/',
         'Middleware\\'  => __DIR__ . '/middleware/',

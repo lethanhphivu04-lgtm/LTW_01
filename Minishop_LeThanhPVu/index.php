@@ -25,8 +25,8 @@ if ($controller === null) {
     $segments = $route !== '' ? explode('/', $route) : [];
 
     if (empty($segments) || $segments[0] === 'index.php') {
-        $area = "admin";
-        $controller = "product";
+        $area = "client";
+        $controller = "home";
         $action = "index";
     } elseif ($segments[0] === 'admin') {
         $area = "admin";
@@ -62,8 +62,8 @@ if ($controller === null) {
 }
 
 // Giá trị mặc định
-$area = $area ?? "admin";
-$controller = $controller ?? "product";
+$area = $area ?? "client";
+$controller = $controller ?? "home";
 $action = $action ?? "index";
 
 // *** Kiểm tra Authentication cho Admin
