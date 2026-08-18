@@ -5,11 +5,6 @@ use Models\Brand;
 
 class BrandDAO extends BaseDAO
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     private function mapRow(array $row): Brand
     {
         $brand = new Brand(
@@ -160,7 +155,6 @@ class BrandDAO extends BaseDAO
 
     public function countAll(): int
     {
-        $res = $this->executeQuery("SELECT COUNT(*) AS total FROM brands");
-        return $res ? (int)$res->fetch_assoc()['total'] : 0;
+        return $this->count("brands");
     }
 }

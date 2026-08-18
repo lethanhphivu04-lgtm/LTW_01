@@ -5,11 +5,6 @@ use Models\Customer;
 
 class CustomerDAO extends BaseDAO
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     private function mapRow(array $row): Customer
     {
         $c = new Customer(
@@ -163,7 +158,6 @@ class CustomerDAO extends BaseDAO
 
     public function countAll(): int
     {
-        $res = $this->executeQuery("SELECT COUNT(*) AS total FROM customers");
-        return $res ? (int)$res->fetch_assoc()['total'] : 0;
+        return $this->count("customers");
     }
 }

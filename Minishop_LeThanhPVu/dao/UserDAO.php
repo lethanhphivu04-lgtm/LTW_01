@@ -5,11 +5,6 @@ use Models\User;
 
 class UserDAO extends BaseDAO
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     private function mapRow(array $row): User
     {
         $u = new User(
@@ -186,7 +181,6 @@ class UserDAO extends BaseDAO
 
     public function countAll(): int
     {
-        $res = $this->executeQuery("SELECT COUNT(*) AS total FROM users");
-        return $res ? (int)$res->fetch_assoc()['total'] : 0;
+        return $this->count("users");
     }
 }

@@ -1,7 +1,7 @@
 <?php
 spl_autoload_register(function ($className) {
     // Tương thích ngược cho các object Model từ session cũ (chưa có namespace)
-    if (in_array($className, ['User', 'Product', 'Category', 'Brand', 'Customer', 'Order', 'OrderDetail', 'ProductImage'])) {
+    if (in_array($className, ['User', 'Product', 'Category', 'Brand', 'Customer', 'Order', 'OrderDetail'])) {
         $modelFile = __DIR__ . '/models/' . $className . '.php';
         if (file_exists($modelFile)) {
             require_once $modelFile;

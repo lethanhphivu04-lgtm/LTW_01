@@ -5,11 +5,6 @@ use Models\Category;
 
 class CategoryDAO extends BaseDAO
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     private function mapRow(array $row): Category
     {
         $category = new Category(
@@ -171,10 +166,8 @@ class CategoryDAO extends BaseDAO
         return $list;
     }
 
-    // Đếm tổng số danh mục cho Dashboard
     public function countAll(): int
     {
-        $res = $this->executeQuery("SELECT COUNT(*) AS total FROM categories");
-        return $res ? (int)$res->fetch_assoc()['total'] : 0;
+        return $this->count("categories");
     }
 }

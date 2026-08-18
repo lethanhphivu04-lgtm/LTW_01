@@ -5,11 +5,6 @@ use Models\Product;
 
 class ProductDAO extends BaseDAO
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     private function mapRow(array $row): Product
     {
         $p = new Product(
@@ -205,8 +200,7 @@ class ProductDAO extends BaseDAO
 
     public function countAll(): int
     {
-        $res = $this->executeQuery("SELECT COUNT(*) AS total FROM products");
-        return $res ? (int)$res->fetch_assoc()['total'] : 0;
+        return $this->count("products");
     }
 
     // Lấy 5 sản phẩm mới nhất cho Dashboard

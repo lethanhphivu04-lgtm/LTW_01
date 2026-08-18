@@ -5,11 +5,6 @@ use Config\Database;
 
 class BaseDAO extends Database
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     // Thực thi câu lệnh SELECT
     protected function executeQuery(string $sql): \mysqli_result|false
     {

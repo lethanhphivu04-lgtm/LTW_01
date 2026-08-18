@@ -6,11 +6,6 @@ use Models\OrderDetail;
 
 class OrderDAO extends BaseDAO
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     private function mapRow(array $row): Order
     {
         $o = new Order(
@@ -116,8 +111,7 @@ class OrderDAO extends BaseDAO
 
     public function countAll(): int
     {
-        $res = $this->executeQuery("SELECT COUNT(*) AS total FROM orders");
-        return $res ? (int)$res->fetch_assoc()['total'] : 0;
+        return $this->count("orders");
     }
 
     // Lấy 5 đơn hàng mới nhất kèm tên khách hàng cho Dashboard
@@ -240,16 +234,11 @@ class OrderDAO extends BaseDAO
         return $list;
     }
 
-    // Cập nhật trạng thái đơn hàng
     public function updateStatus(int $id, int $status): bool
     {
-        try {
-            $sql = "UPDATE orders SET status=? WHERE id=?";
-            $stmt = $this->prepare($sql);
-            $stmt->bind_param("ii", $status, $id);
-            return $stmt->execute();
-        } catch (\Exception $e) {
-            throw $e;
-        }
+        $sql = "UPDATE orders SET status=? WHERE id=?";
+        $stmt = $this->prepare($sql);
+        $stmt->bind_param("ii", $status, $id);
+        return $stmt->execute();
     }
 }
