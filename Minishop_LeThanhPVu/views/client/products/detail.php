@@ -60,8 +60,12 @@
             </div>
 
             <div class="d-flex gap-3">
-                <button class="btn btn-primary btn-lg flex-fill"><i class="bi bi-cart-plus me-2"></i>Thêm vào giỏ hàng</button>
-                <button class="btn btn-danger btn-lg flex-fill"><i class="bi bi-bag-check me-2"></i>Mua ngay</button>
+                <button type="button" class="btn btn-primary btn-lg flex-fill btn-add-cart" data-productid="<?= $product['id'] ?>">
+                    <i class="bi bi-cart-plus me-2"></i>Thêm vào giỏ hàng
+                </button>
+                <button type="button" class="btn btn-danger btn-lg flex-fill btn-add-cart btn-buy-now" data-productid="<?= $product['id'] ?>" onclick="setTimeout(() => window.location.href='<?= $baseUrl ?>/index.php?area=client&controller=cart&action=index', 300)">
+                    <i class="bi bi-bag-check me-2"></i>Mua ngay
+                </button>
             </div>
         </div>
     </div>

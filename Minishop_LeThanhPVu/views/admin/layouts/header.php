@@ -42,8 +42,14 @@ $displayName = ($user && isset($user->fullname))
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3 shadow-sm">
-    <a class="navbar-brand fw-bold text-primary" href="<?= $baseUrl ?>/index.php?area=admin&controller=product&action=index"><i class="bi bi-cart-fill"></i> MINI SHOP</a>
+    <a class="navbar-brand fw-bold text-primary" href="<?= $baseUrl ?>/admin/dashboard"><i class="bi bi-cart-fill"></i> MINI SHOP</a>
     <div class="ms-auto d-flex align-items-center gap-3">
+        <a href="<?= $baseUrl ?>" class="btn btn-outline-info btn-sm text-decoration-none" title="Xem trang bán hàng">
+            <i class="bi bi-globe me-1"></i>Xem Website
+        </a>
+        <a href="<?= $baseUrl ?>/cart" class="btn btn-outline-warning btn-sm text-decoration-none" title="Vào giỏ hàng">
+            <i class="bi bi-cart3 me-1"></i>Giỏ hàng
+        </a>
         <span class="navbar-text text-white mb-0"><i class="bi bi-person-circle fs-5 me-1"></i> <?= $displayName ?></span>
         <?php if ($user): ?>
             <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#logoutModal">

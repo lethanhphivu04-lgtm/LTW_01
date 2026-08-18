@@ -17,9 +17,17 @@ if ($controller === null) {
     // Nếu không có ?route=, thử lấy từ REQUEST_URI
     if ($route === '') {
         $uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
-        $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
-        $path = substr($uri, strlen($scriptDir));
+        $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+        if ($scriptDir !== '/' && strpos($uri, $scriptDir) === 0) {
+            $path = substr($uri, strlen($scriptDir));
+        } else {
+            $path = $uri;
+        }
         $route = trim($path, '/');
+    }
+
+    if (str_starts_with($route, 'index.php/')) {
+        $route = substr($route, 10);
     }
 
     $segments = $route !== '' ? explode('/', $route) : [];
@@ -30,7 +38,7 @@ if ($controller === null) {
         $action = "index";
     } elseif ($segments[0] === 'admin') {
         $area = "admin";
-        $sec = $segments[1] ?? 'product';
+        $sec = $segments[1] ?? 'dashboard';
 
         if ($sec === 'login') {
             $controller = "auth";
@@ -51,12 +59,50 @@ if ($controller === null) {
                 $_GET['id'] = $segments[3];
             }
         }
+    } elseif ($segments[0] === 'cart') {
+        $area = "client";
+        $controller = "cart";
+        $action = $segments[1] ?? "index";
+        if (isset($segments[2])) {
+            $_GET['id'] = $segments[2];
+        }
+    } elseif ($segments[0] === 'category' || $segments[0] === 'danh-muc') {
+        $area = "client";
+        $controller = "product";
+        $action = "category";
+        if (isset($segments[1])) {
+            $_GET['slug'] = $segments[1];
+        }
+    } elseif ($segments[0] === 'brand' || $segments[0] === 'thuong-hieu') {
+        $area = "client";
+        $controller = "product";
+        $action = "brand";
+        if (isset($segments[1])) {
+            $_GET['slug'] = $segments[1];
+        }
+    } elseif ($segments[0] === 'product' || $segments[0] === 'products' || $segments[0] === 'san-pham') {
+        $area = "client";
+        $controller = "product";
+        if (empty($segments[1])) {
+            $action = "index";
+        } elseif (in_array($segments[1], ['index', 'category', 'brand', 'detail', 'search'])) {
+            $action = $segments[1];
+            if (isset($segments[2])) {
+                $_GET['slug'] = $segments[2];
+                $_GET['id'] = $segments[2];
+            }
+        } else {
+            // Hỗ trợ đường dẫn /product/{slug}
+            $action = "detail";
+            $_GET['slug'] = $segments[1];
+        }
     } else {
         $area = "client";
         $controller = rtrim($segments[0], 's');
         $action = $segments[1] ?? 'index';
         if (isset($segments[2])) {
             $_GET['id'] = $segments[2];
+            $_GET['slug'] = $segments[2];
         }
     }
 }

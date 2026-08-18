@@ -160,4 +160,45 @@ class CustomerDAO extends BaseDAO
     {
         return $this->count("customers");
     }
+
+    public function findByPhone(string $phone): ?Customer
+    {
+        try {
+            $sql = "SELECT id, fullname, phone, email, address, note, status, created_at, updated_at FROM customers WHERE phone = ? LIMIT 1";
+            $stmt = $this->prepare($sql);
+            $stmt->bind_param("s", $phone);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                return $this->mapRow($row);
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
+        return null;
+    }
+
+    public function insertGetId(Customer $c): int
+    {
+        try {
+            $sql = "INSERT INTO customers(fullname, phone, email, address, note, status) VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt = $this->prepare($sql);
+            $stmt->bind_param(
+                "sssssi",
+                $c->fullname,
+                $c->phone,
+                $c->email,
+                $c->address,
+                $c->note,
+                $c->status
+            );
+            if ($stmt->execute()) {
+                return $this->conn->insert_id;
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
+        return 0;
+    }
 }
+

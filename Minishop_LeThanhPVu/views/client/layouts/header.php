@@ -20,6 +20,9 @@ $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= $baseUrl ?>/assets/client/style.css">
+    <script>
+        window.BASE_URL = '<?= $baseUrl ?>';
+    </script>
 </head>
 <body>
 <!-- Top Bar -->
@@ -42,17 +45,17 @@ $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link fw-semibold" href="<?= $baseUrl ?>/index.php"><i class="bi bi-house me-1"></i>Trang chủ</a>
+                    <a class="nav-link fw-semibold" href="<?= $baseUrl ?>"><i class="bi bi-house me-1"></i>Trang chủ</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link fw-semibold" href="<?= $baseUrl ?>/index.php?area=client&controller=product&action=index"><i class="bi bi-grid me-1"></i>Sản phẩm</a>
+                    <a class="nav-link fw-semibold" href="<?= $baseUrl ?>/products"><i class="bi bi-grid me-1"></i>Sản phẩm</a>
                 </li>
                 <!-- Dropdown Danh mục -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle fw-semibold" href="#" data-bs-toggle="dropdown"><i class="bi bi-folder me-1"></i>Danh mục</a>
                     <ul class="dropdown-menu">
                         <?php foreach ($headerCategories as $cat): ?>
-                        <li><a class="dropdown-item" href="<?= $baseUrl ?>/index.php?area=client&controller=product&action=category&slug=<?= urlencode($cat->slug) ?>"><?= htmlspecialchars($cat->name) ?></a></li>
+                        <li><a class="dropdown-item" href="<?= $baseUrl ?>/category/<?= urlencode($cat->slug) ?>"><?= htmlspecialchars($cat->name) ?></a></li>
                         <?php endforeach; ?>
                     </ul>
                 </li>
@@ -61,16 +64,13 @@ $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
                     <a class="nav-link dropdown-toggle fw-semibold" href="#" data-bs-toggle="dropdown"><i class="bi bi-tag me-1"></i>Thương hiệu</a>
                     <ul class="dropdown-menu">
                         <?php foreach ($headerBrands as $brand): ?>
-                        <li><a class="dropdown-item" href="<?= $baseUrl ?>/index.php?area=client&controller=product&action=brand&slug=<?= urlencode($brand->slug) ?>"><?= htmlspecialchars($brand->name) ?></a></li>
+                        <li><a class="dropdown-item" href="<?= $baseUrl ?>/brand/<?= urlencode($brand->slug) ?>"><?= htmlspecialchars($brand->name) ?></a></li>
                         <?php endforeach; ?>
                     </ul>
                 </li>
             </ul>
             <!-- Search -->
-            <form class="d-flex me-3" action="<?= $baseUrl ?>/index.php" method="GET">
-                <input type="hidden" name="area" value="client">
-                <input type="hidden" name="controller" value="product">
-                <input type="hidden" name="action" value="search">
+            <form class="d-flex me-3" action="<?= $baseUrl ?>/products/search" method="GET">
                 <div class="input-group">
                     <input type="text" name="keyword" class="form-control" placeholder="Tìm kiếm sản phẩm..." value="<?= htmlspecialchars($_GET['keyword'] ?? '') ?>">
                     <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
@@ -78,12 +78,21 @@ $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
             </form>
             <!-- Icons -->
             <div class="d-flex align-items-center gap-3">
-                <a href="<?= $baseUrl ?>/index.php?area=admin&controller=auth&action=login" class="text-dark fs-5" title="Đăng nhập Admin"><i class="bi bi-person-circle"></i></a>
-                <a href="#" class="text-dark fs-5 position-relative" title="Giỏ hàng">
+                <a href="<?= $baseUrl ?>/admin/login" class="text-dark fs-5" title="Đăng nhập Admin"><i class="bi bi-person-circle"></i></a>
+                <?php
+                $headerCartCount = 0;
+                if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+                    foreach ($_SESSION['cart'] as $cItem) {
+                        $headerCartCount += (int)($cItem['quantity'] ?? 0);
+                    }
+                }
+                ?>
+                <a href="<?= $baseUrl ?>/cart" class="btn btn-outline-primary position-relative" title="Giỏ hàng">
                     <i class="bi bi-cart3"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem">0</span>
+                    <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><?= $headerCartCount ?></span>
                 </a>
             </div>
         </div>
     </div>
 </nav>
+

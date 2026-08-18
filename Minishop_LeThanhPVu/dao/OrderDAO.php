@@ -241,4 +241,55 @@ class OrderDAO extends BaseDAO
         $stmt->bind_param("ii", $status, $id);
         return $stmt->execute();
     }
+
+    public function createOrderWithDetails(Order $order, array $items): int
+    {
+        $this->conn->begin_transaction();
+        try {
+            $sqlOrder = "INSERT INTO orders(customer_id, user_id, order_code, total_amount, note, status) VALUES (?, ?, ?, ?, ?, ?)";
+            $stmtOrder = $this->prepare($sqlOrder);
+            $stmtOrder->bind_param(
+                "iisdsi",
+                $order->customerId,
+                $order->userId,
+                $order->orderCode,
+                $order->totalAmount,
+                $order->note,
+                $order->status
+            );
+            if (!$stmtOrder->execute()) {
+                throw new \Exception("Không thể tạo đơn hàng: " . $stmtOrder->error);
+            }
+            $orderId = (int)$this->conn->insert_id;
+
+            $sqlDetail = "INSERT INTO order_details(order_id, product_id, quantity, price, subtotal) VALUES (?, ?, ?, ?, ?)";
+            $stmtDetail = $this->prepare($sqlDetail);
+
+            foreach ($items as $item) {
+                $productId = (int)($item['productid'] ?? $item['id']);
+                $quantity = (int)$item['quantity'];
+                $price = (float)$item['price'];
+                $subtotal = $price * $quantity;
+
+                $stmtDetail->bind_param(
+                    "iiidd",
+                    $orderId,
+                    $productId,
+                    $quantity,
+                    $price,
+                    $subtotal
+                );
+                if (!$stmtDetail->execute()) {
+                    throw new \Exception("Không thể lưu chi tiết đơn hàng: " . $stmtDetail->error);
+                }
+            }
+
+            $this->conn->commit();
+            return $orderId;
+        } catch (\Exception $e) {
+            $this->conn->rollback();
+            throw $e;
+        }
+    }
 }
+
