@@ -51,71 +51,21 @@ class ProductController
         $errors = [];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $name = trim($_POST['proname'] ?? '');
-            $slug = trim($_POST['slug'] ?? '');
-            $categoryId = (int)($_POST['category_id'] ?? 0);
-            $brandId = (int)($_POST['brand_id'] ?? 0);
-            $price = (float)($_POST['price'] ?? 0);
-            $discountPrice = (float)($_POST['discount_price'] ?? 0);
-            $quantity = (int)($_POST['quantity'] ?? 0);
-            $description = trim($_POST['description'] ?? '');
-            $status = (int)($_POST['status'] ?? 1);
-
-            if ($name === '') $errors[] = 'Tên sản phẩm không được để trống.';
-            if ($categoryId <= 0) $errors[] = 'Vui lòng chọn loại sản phẩm.';
-            if ($brandId <= 0) $errors[] = 'Vui lòng chọn thương hiệu.';
-            if ($price <= 0) $errors[] = 'Giá gốc phải lớn hơn 0.';
-            if ($discountPrice < 0) $errors[] = 'Giá bán không được nhỏ hơn 0.';
-            if ($quantity < 0) $errors[] = 'Số lượng không được nhỏ hơn 0.';
-
-            if ($slug === '') {
-                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
-            }
-
-            $image = "";
-            $fileName = $_FILES["image"]["name"] ?? "";
-            $tmpName  = $_FILES["image"]["tmp_name"] ?? "";
-            $fileSize = $_FILES["image"]["size"] ?? 0;
-            $error    = $_FILES["image"]["error"] ?? 0;
-
-            if ($fileName != "") {
-                if ($error != UPLOAD_ERR_OK) {
-                    $errors[] = "Upload hình ảnh không thành công.";
-                }
-                $allowExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
-                $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                if (!in_array($extension, $allowExtensions)) {
-                    $errors[] = "Chỉ cho phép file JPG, JPEG, PNG, GIF hoặc WEBP.";
-                }
-                $maxSize = 2 * 1024 * 1024;
-                if ($fileSize > $maxSize) {
-                    $errors[] = "Kích thước hình ảnh <= 2 MB.";
-                }
-                if (empty($errors)) {
-                    $image = time() . "_" . uniqid() . "." . $extension;
-                    $uploadDir = __DIR__ . "/../../uploads/products/";
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0777, true);
-                    }
-                    if (!move_uploaded_file($tmpName, $uploadDir . $image)) {
-                        $errors[] = "Lỗi khi lưu file ảnh.";
-                        $image = "";
-                    }
-                }
-            }
+            $data = $this->extractAndValidate($_POST, $errors);
+            $image = $this->handleUpload($_FILES['image'] ?? [], null, $errors);
 
             if (empty($errors)) {
                 $p = new Product(
-                    $categoryId,
-                    $brandId,
-                    $name,
-                    $slug,
-                    $price,
-                    $discountPrice,
-                    $quantity,
-                    $image !== '' ? $image : null,
-                    $description !== '' ? $description : null,
-                    $status
+                    $data['category_id'],
+                    $data['brand_id'],
+                    $data['name'],
+                    $data['slug'],
+                    $data['price'],
+                    $data['discount_price'],
+                    $data['quantity'],
+                    $image,
+                    $data['description'],
+                    $data['status']
                 );
                 $this->productDAO->insert($p);
                 header("Location: index.php?area=admin&controller=product&action=index");
@@ -141,74 +91,20 @@ class ProductController
         $errors = [];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $name = trim($_POST['proname'] ?? '');
-            $slug = trim($_POST['slug'] ?? '');
-            $categoryId = (int)($_POST['category_id'] ?? 0);
-            $brandId = (int)($_POST['brand_id'] ?? 0);
-            $price = (float)($_POST['price'] ?? 0);
-            $discountPrice = (float)($_POST['discount_price'] ?? 0);
-            $quantity = (int)($_POST['quantity'] ?? 0);
-            $description = trim($_POST['description'] ?? '');
-            $status = (int)($_POST['status'] ?? 1);
-
-            if ($name === '') $errors[] = 'Tên sản phẩm không được để trống.';
-            if ($categoryId <= 0) $errors[] = 'Vui lòng chọn loại sản phẩm.';
-            if ($brandId <= 0) $errors[] = 'Vui lòng chọn thương hiệu.';
-            if ($price <= 0) $errors[] = 'Giá gốc phải lớn hơn 0.';
-            if ($discountPrice < 0) $errors[] = 'Giá bán không được nhỏ hơn 0.';
-            if ($quantity < 0) $errors[] = 'Số lượng không được nhỏ hơn 0.';
-
-            if ($slug === '') {
-                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
-            }
-
-            $image = $product->image;
-            $fileName = $_FILES["image"]["name"] ?? "";
-            $tmpName  = $_FILES["image"]["tmp_name"] ?? "";
-            $fileSize = $_FILES["image"]["size"] ?? 0;
-            $error    = $_FILES["image"]["error"] ?? 0;
-
-            if ($fileName != "") {
-                if ($error != UPLOAD_ERR_OK) {
-                    $errors[] = "Upload hình ảnh không thành công.";
-                }
-                $allowExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
-                $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                if (!in_array($extension, $allowExtensions)) {
-                    $errors[] = "Chỉ cho phép file JPG, JPEG, PNG, GIF hoặc WEBP.";
-                }
-                $maxSize = 2 * 1024 * 1024;
-                if ($fileSize > $maxSize) {
-                    $errors[] = "Kích thước hình ảnh <= 2 MB.";
-                }
-                if (empty($errors)) {
-                    $newImage = time() . "_" . uniqid() . "." . $extension;
-                    $uploadDir = __DIR__ . "/../../uploads/products/";
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0777, true);
-                    }
-                    if (move_uploaded_file($tmpName, $uploadDir . $newImage)) {
-                        if (!empty($product->image) && file_exists($uploadDir . $product->image)) {
-                            unlink($uploadDir . $product->image);
-                        }
-                        $image = $newImage;
-                    } else {
-                        $errors[] = "Lỗi khi lưu file ảnh.";
-                    }
-                }
-            }
+            $data = $this->extractAndValidate($_POST, $errors);
+            $image = $this->handleUpload($_FILES['image'] ?? [], $product->image, $errors) ?? $product->image;
 
             if (empty($errors)) {
-                $product->categoryId = $categoryId;
-                $product->brandId = $brandId;
-                $product->name = $name;
-                $product->slug = $slug;
-                $product->price = $price;
-                $product->discountPrice = $discountPrice;
-                $product->quantity = $quantity;
+                $product->categoryId = $data['category_id'];
+                $product->brandId = $data['brand_id'];
+                $product->name = $data['name'];
+                $product->slug = $data['slug'];
+                $product->price = $data['price'];
+                $product->discountPrice = $data['discount_price'];
+                $product->quantity = $data['quantity'];
                 $product->image = $image;
-                $product->description = $description;
-                $product->status = $status;
+                $product->description = $data['description'];
+                $product->status = $data['status'];
 
                 $this->productDAO->update($product);
                 header("Location: index.php?area=admin&controller=product&action=index");
@@ -242,5 +138,82 @@ class ProductController
         }
         header("Location: index.php?area=admin&controller=product&action=index");
         exit;
+    }
+
+    // --- Helper Methods ---
+
+    private function extractAndValidate(array $post, array &$errors): array
+    {
+        $name = trim($post['proname'] ?? '');
+        $slug = trim($post['slug'] ?? '');
+        $categoryId = (int)($post['category_id'] ?? 0);
+        $brandId = (int)($post['brand_id'] ?? 0);
+        $price = (float)($post['price'] ?? 0);
+        $discountPrice = (float)($post['discount_price'] ?? 0);
+        $quantity = (int)($post['quantity'] ?? 0);
+        $description = trim($post['description'] ?? '');
+        $status = (int)($post['status'] ?? 1);
+
+        if ($name === '') $errors[] = 'Tên sản phẩm không được để trống.';
+        if ($categoryId <= 0) $errors[] = 'Vui lòng chọn loại sản phẩm.';
+        if ($brandId <= 0) $errors[] = 'Vui lòng chọn thương hiệu.';
+        if ($price <= 0) $errors[] = 'Giá gốc phải lớn hơn 0.';
+        if ($discountPrice < 0) $errors[] = 'Giá bán không được nhỏ hơn 0.';
+        if ($quantity < 0) $errors[] = 'Số lượng không được nhỏ hơn 0.';
+
+        if ($slug === '' && $name !== '') {
+            $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
+        }
+
+        return [
+            'name' => $name,
+            'slug' => $slug,
+            'category_id' => $categoryId,
+            'brand_id' => $brandId,
+            'price' => $price,
+            'discount_price' => $discountPrice,
+            'quantity' => $quantity,
+            'description' => $description !== '' ? $description : null,
+            'status' => $status,
+        ];
+    }
+
+    private function handleUpload(array $file, ?string $oldImage, array &$errors): ?string
+    {
+        $fileName = $file['name'] ?? '';
+        if ($fileName === '') return null;
+
+        if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            $errors[] = 'Upload hình ảnh không thành công.';
+            return null;
+        }
+
+        $allowExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        if (!in_array($extension, $allowExtensions)) {
+            $errors[] = 'Chỉ cho phép file JPG, JPEG, PNG, GIF hoặc WEBP.';
+            return null;
+        }
+
+        if (($file['size'] ?? 0) > 2 * 1024 * 1024) {
+            $errors[] = 'Kích thước hình ảnh <= 2 MB.';
+            return null;
+        }
+
+        $newImage = time() . '_' . uniqid() . '.' . $extension;
+        $uploadDir = __DIR__ . '/../../uploads/products/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        if (move_uploaded_file($file['tmp_name'], $uploadDir . $newImage)) {
+            if (!empty($oldImage) && file_exists($uploadDir . $oldImage)) {
+                unlink($uploadDir . $oldImage);
+            }
+            return $newImage;
+        }
+
+        $errors[] = 'Lỗi khi lưu file ảnh.';
+        return null;
     }
 }
