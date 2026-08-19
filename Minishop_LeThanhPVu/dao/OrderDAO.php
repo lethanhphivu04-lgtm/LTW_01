@@ -99,12 +99,37 @@ class OrderDAO extends BaseDAO
 
     public function delete(int $id): bool
     {
+        $this->conn->begin_transaction();
         try {
+            $currentOrder = $this->findById($id);
+            // Nếu đơn hàng chưa bị hủy (status != 4), hoàn trả tồn kho trước khi xóa
+            if ($currentOrder && $currentOrder->status !== 4) {
+                $details = $this->getOrderDetails($id);
+                $sqlRestore = "UPDATE products SET quantity = quantity + ? WHERE id = ?";
+                $stmtRestore = $this->prepare($sqlRestore);
+                foreach ($details as $item) {
+                    $pId = (int)$item['product_id'];
+                    $qty = (int)$item['quantity'];
+                    $stmtRestore->bind_param("ii", $qty, $pId);
+                    $stmtRestore->execute();
+                }
+            }
+
+            // Xóa chi tiết đơn hàng trước (Foreign Key cascade)
+            $sqlDeleteDetails = "DELETE FROM order_details WHERE order_id=?";
+            $stmtDeleteDetails = $this->prepare($sqlDeleteDetails);
+            $stmtDeleteDetails->bind_param("i", $id);
+            $stmtDeleteDetails->execute();
+
             $sql = "DELETE FROM orders WHERE id=?";
             $stmt = $this->prepare($sql);
             $stmt->bind_param("i", $id);
-            return $stmt->execute();
+            $stmt->execute();
+
+            $this->conn->commit();
+            return true;
         } catch (\Exception $e) {
+            $this->conn->rollback();
             throw $e;
         }
     }
@@ -212,6 +237,27 @@ class OrderDAO extends BaseDAO
         return null;
     }
 
+    // Tra cứu đơn hàng cho khách vãng lai bằng Mã Đơn Hàng + SĐT
+    public function findByOrderCodeAndPhone(string $orderCode, string $phone): ?array
+    {
+        try {
+            $sql = "SELECT o.*, c.fullname AS customer_name, c.phone AS customer_phone, c.address AS customer_address, c.email AS customer_email 
+                    FROM orders o 
+                    INNER JOIN customers c ON o.customer_id = c.id 
+                    WHERE o.order_code = ? AND c.phone = ?";
+            $stmt = $this->prepare($sql);
+            $stmt->bind_param("ss", $orderCode, $phone);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                return $row;
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
+        return null;
+    }
+
     // Lấy chi tiết sản phẩm trong đơn hàng (Master-Detail)
     public function getOrderDetails(int $orderId): array
     {
@@ -236,6 +282,34 @@ class OrderDAO extends BaseDAO
 
     public function updateStatus(int $id, int $status): bool
     {
+        // Nếu chuyển sang trạng thái Hủy (4) và trước đó chưa ở trạng thái 4 -> Hoàn trả tồn kho
+        if ($status === 4) {
+            $currentOrder = $this->findById($id);
+            if ($currentOrder && $currentOrder->status !== 4) {
+                $details = $this->getOrderDetails($id);
+                $this->conn->begin_transaction();
+                try {
+                    $sqlRestore = "UPDATE products SET quantity = quantity + ? WHERE id = ?";
+                    $stmtRestore = $this->prepare($sqlRestore);
+                    foreach ($details as $item) {
+                        $pId = (int)$item['product_id'];
+                        $qty = (int)$item['quantity'];
+                        $stmtRestore->bind_param("ii", $qty, $pId);
+                        $stmtRestore->execute();
+                    }
+                    $sql = "UPDATE orders SET status=? WHERE id=?";
+                    $stmt = $this->prepare($sql);
+                    $stmt->bind_param("ii", $status, $id);
+                    $stmt->execute();
+                    $this->conn->commit();
+                    return true;
+                } catch (\Exception $e) {
+                    $this->conn->rollback();
+                    throw $e;
+                }
+            }
+        }
+
         $sql = "UPDATE orders SET status=? WHERE id=?";
         $stmt = $this->prepare($sql);
         $stmt->bind_param("ii", $status, $id);
@@ -265,12 +339,22 @@ class OrderDAO extends BaseDAO
             $sqlDetail = "INSERT INTO order_details(order_id, product_id, quantity, price, subtotal) VALUES (?, ?, ?, ?, ?)";
             $stmtDetail = $this->prepare($sqlDetail);
 
+            $sqlDeduct = "UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
+            $stmtDeduct = $this->prepare($sqlDeduct);
+
             foreach ($items as $item) {
                 $productId = (int)($item['productid'] ?? $item['id']);
                 $quantity = (int)$item['quantity'];
                 $price = (float)$item['price'];
                 $subtotal = $price * $quantity;
 
+                // 1. Trừ tồn kho trong CSDL (Atomic check & update)
+                $stmtDeduct->bind_param("iii", $quantity, $productId, $quantity);
+                if (!$stmtDeduct->execute() || $stmtDeduct->affected_rows === 0) {
+                    throw new \Exception("Sản phẩm ID {$productId} không đủ tồn kho hoặc đã được mua bởi người khác.");
+                }
+
+                // 2. Thêm vào bảng order_details
                 $stmtDetail->bind_param(
                     "iiidd",
                     $orderId,

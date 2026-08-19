@@ -49,7 +49,7 @@ class BrandController
 
             if ($name === '') $errors[] = 'Tên thương hiệu không được để trống.';
             if ($slug === '') {
-                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
+                $slug = create_slug($name);
             }
 
             $image = "";
@@ -121,7 +121,7 @@ class BrandController
 
             if ($name === '') $errors[] = 'Tên thương hiệu không được để trống.';
             if ($slug === '') {
-                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
+                $slug = create_slug($name);
             }
 
             $image = $brand->image;

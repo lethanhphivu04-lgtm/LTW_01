@@ -6,8 +6,13 @@ document.addEventListener('DOMContentLoaded', function () {
             var input = document.getElementById('qty-input');
             if (!input) return;
             var val = parseInt(input.value) || 1;
-            if (this.dataset.action === 'increase') input.value = val + 1;
-            else if (val > 1) input.value = val - 1;
+            var maxAttr = input.getAttribute('max');
+            var max = maxAttr ? parseInt(maxAttr) : 999;
+            if (this.dataset.action === 'increase') {
+                if (val < max) input.value = val + 1;
+            } else if (val > 1) {
+                input.value = val - 1;
+            }
         });
     });
 });

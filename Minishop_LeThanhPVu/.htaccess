@@ -7,3 +7,5 @@ RewriteCond %{REQUEST_FILENAME} !-d
 
 # Đưa mọi request về Entry Point index.php
 RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
+
+

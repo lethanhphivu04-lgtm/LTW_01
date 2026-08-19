@@ -19,7 +19,10 @@ class CsrfMiddleware
             session_start();
         }
         $token = $_POST["csrf_token"] ?? "";
-        if (!isset($_SESSION["csrf_token"]) || !hash_equals($_SESSION["csrf_token"], $token)) {
+        $sessionToken = $_SESSION["csrf_token"] ?? "";
+
+        if (empty($sessionToken) || !is_string($sessionToken) || !hash_equals($sessionToken, (string)$token)) {
+            http_response_code(403);
             die("CSRF Token không hợp lệ.");
         }
     }

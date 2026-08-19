@@ -90,6 +90,26 @@ class CartController
 
         $cart = $this->getCart();
 
+        // Kiểm tra tổng số lượng đã có trong giỏ + số lượng muốn thêm mới so với tồn kho
+        $currentQtyInCart = isset($cart[$productId]) ? (int)$cart[$productId]["quantity"] : 0;
+        $newTotalQty = $currentQtyInCart + $qty;
+
+        if ($newTotalQty > $product->quantity) {
+            $remainingCanAdd = max(0, $product->quantity - $currentQtyInCart);
+            if ($remainingCanAdd <= 0) {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Sản phẩm trong giỏ hàng đã đạt giới hạn tồn kho (tối đa {$product->quantity} sản phẩm)."
+                ]);
+            } else {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Không thể thêm {$qty} sản phẩm. Giỏ hàng đã có {$currentQtyInCart}, bạn chỉ có thể thêm tối đa {$remainingCanAdd} sản phẩm nữa."
+                ]);
+            }
+            exit;
+        }
+
         if (isset($cart[$productId])) {
             $cart[$productId]["quantity"] += $qty;
         } else {
@@ -134,6 +154,14 @@ class CartController
             unset($cart[$productId]);
             $subtotal = 0;
         } else {
+            $product = $this->productDAO->findById($productId);
+            if ($product && $quantity > $product->quantity) {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Không thể cập nhật: Số lượng vượt quá tồn kho (kho còn {$product->quantity} sản phẩm)."
+                ]);
+                exit;
+            }
             $cart[$productId]["quantity"] = $quantity;
             $subtotal = $cart[$productId]["price"] * $quantity;
         }
@@ -201,6 +229,17 @@ class CartController
                 $_SESSION["checkout_error"] = "Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ nhận hàng.";
                 header("Location: index.php?area=client&controller=cart&action=index");
                 exit;
+            }
+
+            // Kiểm tra tồn kho trước khi đặt hàng
+            foreach ($cart as $pId => $item) {
+                $pObj = $this->productDAO->findById((int)$pId);
+                if (!$pObj || $item["quantity"] > $pObj->quantity) {
+                    $stock = $pObj ? $pObj->quantity : 0;
+                    $_SESSION["checkout_error"] = "Sản phẩm '" . ($item["productname"] ?? '') . "' vượt quá số lượng tồn kho (trong kho chỉ còn {$stock} sản phẩm). Vui lòng cập nhật lại giỏ hàng.";
+                    header("Location: index.php?area=client&controller=cart&action=index");
+                    exit;
+                }
             }
 
             try {
@@ -280,5 +319,29 @@ class CartController
         $orderInfo = $_SESSION["last_order"] ?? null;
         $pageTitle = "Đặt hàng thành công";
         require __DIR__ . "/../../views/client/cart/success.php";
+    }
+
+    public function tracking()
+    {
+        $pageTitle = "Tra cứu đơn hàng";
+        $order = null;
+        $details = [];
+        $error = "";
+
+        $orderCode = trim($_GET['order_code'] ?? $_POST['order_code'] ?? '');
+        $phone = trim($_GET['phone'] ?? $_POST['phone'] ?? '');
+
+        if ($orderCode !== '' && $phone !== '') {
+            $order = $this->orderDAO->findByOrderCodeAndPhone($orderCode, $phone);
+            if ($order) {
+                $details = $this->orderDAO->getOrderDetails((int)$order['id']);
+            } else {
+                $error = "Không tìm thấy đơn hàng khớp với Mã đơn hàng và Số điện thoại đã nhập.";
+            }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $error = "Vui lòng nhập đầy đủ Mã đơn hàng và Số điện thoại.";
+        }
+
+        require __DIR__ . "/../../views/client/cart/tracking.php";
     }
 }

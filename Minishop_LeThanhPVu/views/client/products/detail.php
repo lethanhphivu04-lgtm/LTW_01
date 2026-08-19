@@ -61,19 +61,30 @@
             <div class="d-flex align-items-center gap-3 mb-4">
                 <label class="fw-semibold text-dark">Số lượng:</label>
                 <div class="input-group" style="width:130px;">
-                    <button class="btn btn-outline-secondary btn-qty" type="button" data-action="decrease">−</button>
-                    <input type="number" class="form-control text-center bg-white" id="qty-input" value="1" min="1" readonly>
-                    <button class="btn btn-outline-secondary btn-qty" type="button" data-action="increase">+</button>
+                    <button class="btn btn-outline-secondary btn-qty" type="button" data-action="decrease" <?= (($product['quantity'] ?? 0) <= 0) ? 'disabled' : '' ?>>−</button>
+                    <input type="number" class="form-control text-center bg-white" id="qty-input" value="<?= (($product['quantity'] ?? 0) > 0) ? 1 : 0 ?>" min="1" max="<?= (int)($product['quantity'] ?? 0) ?>" readonly>
+                    <button class="btn btn-outline-secondary btn-qty" type="button" data-action="increase" <?= (($product['quantity'] ?? 0) <= 0) ? 'disabled' : '' ?>>+</button>
                 </div>
+                <?php if (($product['quantity'] ?? 0) > 0): ?>
+                    <span class="text-muted small ms-2">(Còn <strong class="text-dark"><?= (int)$product['quantity'] ?></strong> sản phẩm trong kho)</span>
+                <?php else: ?>
+                    <span class="badge bg-danger ms-2 px-2 py-1">Hết hàng</span>
+                <?php endif; ?>
             </div>
 
             <div class="d-flex gap-3">
-                <button type="button" class="btn btn-outline-dark btn-lg flex-fill btn-add-cart fw-semibold" data-productid="<?= $product['id'] ?>">
-                    <i class="bi bi-cart-plus me-2"></i>Thêm vào giỏ
-                </button>
-                <button type="button" class="btn btn-dark btn-lg flex-fill btn-add-cart btn-buy-now fw-semibold" data-productid="<?= $product['id'] ?>" onclick="setTimeout(() => window.location.href='<?= $baseUrl ?>/cart', 300)">
-                    <i class="bi bi-bag-check me-2"></i>Mua ngay
-                </button>
+                <?php if (($product['quantity'] ?? 0) > 0): ?>
+                    <button type="button" class="btn btn-outline-dark btn-lg flex-fill btn-add-cart fw-semibold" data-productid="<?= $product['id'] ?>">
+                        <i class="bi bi-cart-plus me-2"></i>Thêm vào giỏ
+                    </button>
+                    <button type="button" class="btn btn-dark btn-lg flex-fill btn-add-cart btn-buy-now fw-semibold" data-productid="<?= $product['id'] ?>" onclick="setTimeout(() => window.location.href='<?= $baseUrl ?>/cart', 300)">
+                        <i class="bi bi-bag-check me-2"></i>Mua ngay
+                    </button>
+                <?php else: ?>
+                    <button type="button" class="btn btn-secondary btn-lg flex-fill fw-semibold" disabled>
+                        <i class="bi bi-x-circle me-2"></i>Tạm hết hàng
+                    </button>
+                <?php endif; ?>
             </div>
         </div>
     </div>

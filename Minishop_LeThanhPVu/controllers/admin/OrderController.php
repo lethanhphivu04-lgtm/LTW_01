@@ -39,17 +39,24 @@ class OrderController
     public function detail()
     {
         $id = (int)($_GET['id'] ?? 0);
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
-            $status = (int)($_POST['status'] ?? 0);
-            $this->orderDAO->updateStatus($id, $status);
-            header("Location: index.php?area=admin&controller=order&action=detail&id=" . $id);
-            exit;
-        }
-
         $order = $this->orderDAO->findByIdWithJoin($id);
         if (!$order) {
             header("Location: index.php?area=admin&controller=order&action=index");
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
+            $newStatus = (int)($_POST['status'] ?? 0);
+            $currentStatus = (int)$order['status'];
+
+            // Logic 1 chiều: Nếu chưa ở trạng thái cuối (Hoàn thành:3 hoặc Đã hủy:4)
+            // thì cho phép chuyển tiến (newStatus >= currentStatus) hoặc Hủy (newStatus == 4)
+            if ($currentStatus !== 3 && $currentStatus !== 4) {
+                if ($newStatus >= $currentStatus || $newStatus === 4) {
+                    $this->orderDAO->updateStatus($id, $newStatus);
+                }
+            }
+            header("Location: index.php?area=admin&controller=order&action=detail&id=" . $id);
             exit;
         }
 

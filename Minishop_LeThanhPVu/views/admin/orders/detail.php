@@ -53,21 +53,39 @@ ob_start();
 <div class="card mb-4">
     <div class="card-header bg-secondary text-white fw-bold">Cập nhật trạng thái đơn hàng</div>
     <div class="card-body">
-        <form method="POST" action="index.php?area=admin&controller=order&action=detail&id=<?= $id ?>" class="row g-2 align-items-center">
-            <input type="hidden" name="update_status" value="1">
-            <div class="col-md-6">
-                <select name="status" class="form-select">
-                    <option value="0" <?= $order['status'] == 0 ? 'selected' : '' ?>>0: Chờ xử lý</option>
-                    <option value="1" <?= $order['status'] == 1 ? 'selected' : '' ?>>1: Đã xác nhận</option>
-                    <option value="2" <?= $order['status'] == 2 ? 'selected' : '' ?>>2: Đang giao hàng</option>
-                    <option value="3" <?= $order['status'] == 3 ? 'selected' : '' ?>>3: Hoàn thành</option>
-                    <option value="4" <?= $order['status'] == 4 ? 'selected' : '' ?>>4: Đã hủy</option>
-                </select>
+        <?php if ($order['status'] == 3 || $order['status'] == 4): ?>
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-1"></i> Đơn hàng này đã <strong><?= $order['status'] == 3 ? 'Hoàn thành' : 'Đã hủy' ?></strong>. Trạng thái đơn hàng đã ở bước cuối cùng và không thể thay đổi nữa.
             </div>
-            <div class="col-auto">
-                <button class="btn btn-success" type="submit">Cập nhật trạng thái</button>
-            </div>
-        </form>
+        <?php else: ?>
+            <form method="POST" action="index.php?area=admin&controller=order&action=detail&id=<?= $id ?>" class="row g-2 align-items-center">
+                <input type="hidden" name="update_status" value="1">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+                <div class="col-md-6">
+                    <select name="status" class="form-select">
+                        <?php
+                        $statusNames = [
+                            0 => '0: Chờ xử lý',
+                            1 => '1: Đã xác nhận',
+                            2 => '2: Đang giao hàng',
+                            3 => '3: Hoàn thành',
+                            4 => '4: Đã hủy'
+                        ];
+                        foreach ($statusNames as $stVal => $stName):
+                            if ($stVal >= $order['status'] || $stVal == 4):
+                        ?>
+                            <option value="<?= $stVal ?>" <?= $order['status'] == $stVal ? 'selected' : '' ?>><?= $stName ?></option>
+                        <?php
+                            endif;
+                        endforeach;
+                        ?>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-success" type="submit">Cập nhật trạng thái</button>
+                </div>
+            </form>
+        <?php endif; ?>
     </div>
 </div>
 

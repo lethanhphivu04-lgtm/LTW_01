@@ -128,7 +128,7 @@ class CategoryController
 
         if ($name === '') $errors[] = 'Tên danh mục không được để trống.';
         if ($slug === '' && $name !== '') {
-            $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
+            $slug = create_slug($name);
         }
 
         return [

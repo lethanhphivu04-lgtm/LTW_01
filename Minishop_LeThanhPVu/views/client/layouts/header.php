@@ -66,6 +66,9 @@ $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
                         <li><a class="dropdown-item" href="<?= $baseUrl ?>/brand/<?= urlencode($brand->slug) ?>"><?= htmlspecialchars($brand->name) ?></a></li>
                         <?php endforeach; ?>
                     </ul>
+                <!-- Tra cứu đơn hàng -->
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= $baseUrl ?>/index.php?area=client&controller=cart&action=tracking"><i class="bi bi-search me-1"></i>Tra cứu đơn hàng</a>
                 </li>
             </ul>
             <!-- Search -->

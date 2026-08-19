@@ -33,8 +33,13 @@
                 </div>
                 <?php endif; ?>
 
-                <div>
-                    <a href="<?= $baseUrl ?>" class="btn btn-primary me-2">Về trang chủ</a>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <?php if (!empty($orderInfo)): ?>
+                    <a href="<?= $baseUrl ?>/index.php?area=client&controller=cart&action=tracking&order_code=<?= urlencode($orderInfo['code'] ?? '') ?>&phone=<?= urlencode($orderInfo['phone'] ?? '') ?>" class="btn btn-dark fw-semibold">
+                        <i class="bi bi-search me-1"></i> Tra cứu đơn hàng
+                    </a>
+                    <?php endif; ?>
+                    <a href="<?= $baseUrl ?>" class="btn btn-primary">Về trang chủ</a>
                     <a href="<?= $baseUrl ?>/products" class="btn btn-outline-secondary">Tiếp tục mua hàng</a>
                 </div>
             </div>

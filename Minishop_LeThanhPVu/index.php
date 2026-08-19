@@ -122,10 +122,8 @@ if ($area === "admin" && $controller === "auth" && $action === "login") {
     \Middleware\GuestMiddleware::handle();
 }
 
-// *** Tạo CSRF Token nếu là form POST
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    \Middleware\CsrfMiddleware::generateToken();
-}
+// *** Tạo CSRF Token cho tất cả request
+\Middleware\CsrfMiddleware::generateToken();
 
 // Xác định class Controller theo Area
 if ($area === "admin") {

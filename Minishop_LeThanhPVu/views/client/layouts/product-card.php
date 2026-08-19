@@ -7,6 +7,9 @@ $imgFile = htmlspecialchars($p['image'] ?? 'default.png');
 ?>
 <div class="col">
     <div class="card product-card h-100 position-relative">
+        <?php if (isset($p['quantity']) && (int)$p['quantity'] <= 0): ?>
+            <span class="badge bg-secondary position-absolute top-0 start-0 m-2">Hết hàng</span>
+        <?php endif; ?>
         <?php if ($hasDiscount && $discountPercent > 0): ?>
             <span class="badge-discount position-absolute top-0 end-0 m-2">-<?= $discountPercent ?>%</span>
         <?php endif; ?>
