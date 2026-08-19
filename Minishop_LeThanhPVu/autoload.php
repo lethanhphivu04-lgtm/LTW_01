@@ -19,6 +19,7 @@ spl_autoload_register(function ($className) {
         'Models\\'      => __DIR__ . '/models/',
         'Middleware\\'  => __DIR__ . '/middleware/',
         'Config\\'      => __DIR__ . '/config/',
+        'Services\\'    => __DIR__ . '/services/',
     ];
 
     foreach ($prefixes as $prefix => $baseDir) {

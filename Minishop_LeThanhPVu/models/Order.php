@@ -10,6 +10,7 @@ class Order
     public float $totalAmount;
     public ?string $note;
     public int $status; // 0: Chờ xử lý, 1: Hoàn thành, 2: Hủy
+    public string $paymentMethod; // 'cod' hoặc 'vnpay'
     public string $createdAt;
     public string $updatedAt;
 
@@ -19,7 +20,8 @@ class Order
         string $orderCode = "",
         float $totalAmount = 0,
         ?string $note = null,
-        int $status = 0
+        int $status = 0,
+        string $paymentMethod = 'cod'
     ) {
         $this->customerId = $customerId;
         $this->userId = $userId;
@@ -27,5 +29,6 @@ class Order
         $this->totalAmount = $totalAmount;
         $this->note = $note;
         $this->status = $status;
+        $this->paymentMethod = $paymentMethod;
     }
 }

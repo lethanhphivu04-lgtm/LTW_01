@@ -6,6 +6,7 @@ use DAO\OrderDAO;
 use DAO\CustomerDAO;
 use Models\Order;
 use Models\Customer;
+use Services\VNPayService;
 
 class CartController
 {
@@ -224,6 +225,7 @@ class CartController
             $email = trim($_POST["email"] ?? "");
             $address = trim($_POST["address"] ?? "");
             $note = trim($_POST["note"] ?? "");
+            $paymentMethod = trim($_POST["payment_method"] ?? "cod");
 
             if (empty($fullname) || empty($phone) || empty($address)) {
                 $_SESSION["checkout_error"] = "Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ nhận hàng.";
@@ -247,7 +249,6 @@ class CartController
                 $customer = $this->customerDAO->findByPhone($phone);
                 if ($customer) {
                     $customerId = $customer->id;
-                    // Cập nhật địa chỉ/email mới nhất nếu có
                     if (!empty($address) || !empty($email)) {
                         $customer->address = $address ?: $customer->address;
                         $customer->email = $email ?: $customer->email;
@@ -280,7 +281,8 @@ class CartController
                     $orderCode,
                     $totalAmount,
                     $note,
-                    0 // 0: Chờ xử lý
+                    0, // 0: Chờ xử lý
+                    $paymentMethod
                 );
 
                 // 3. Thực thi Transaction lưu Order & OrderDetail
@@ -289,6 +291,25 @@ class CartController
                 if ($orderId > 0) {
                     // Xóa giỏ hàng sau khi đặt thành công
                     unset($_SESSION["cart"]);
+
+                    // Nếu thanh toán VNPay → redirect sang cổng thanh toán
+                    if ($paymentMethod === 'vnpay') {
+                        $_SESSION["pending_vnpay_order"] = [
+                            "id" => $orderId,
+                            "code" => $orderCode,
+                            "fullname" => $fullname,
+                            "phone" => $phone,
+                            "address" => $address,
+                            "total" => $totalAmount
+                        ];
+                        $ipAddr = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+                        $orderInfo = "Thanh toan don hang " . $orderCode;
+                        $paymentUrl = VNPayService::createPaymentUrl($orderCode, $totalAmount, $orderInfo, $ipAddr);
+                        header("Location: " . $paymentUrl);
+                        exit;
+                    }
+
+                    // COD → hiển thị trang thành công
                     $_SESSION["last_order"] = [
                         "id" => $orderId,
                         "code" => $orderCode,
@@ -343,5 +364,35 @@ class CartController
         }
 
         require __DIR__ . "/../../views/client/cart/tracking.php";
+    }
+
+    /**
+     * Xử lý callback từ VNPay sau khi thanh toán
+     */
+    public function vnpay_return()
+    {
+        $vnpData = $_GET;
+        $result = VNPayService::validateReturn($vnpData);
+
+        $orderCode = $vnpData['vnp_TxnRef'] ?? '';
+        $vnpTransactionNo = $vnpData['vnp_TransactionNo'] ?? '';
+        $vnpAmount = isset($vnpData['vnp_Amount']) ? (float)$vnpData['vnp_Amount'] / 100 : 0;
+        $vnpBankCode = $vnpData['vnp_BankCode'] ?? '';
+
+        $order = $this->orderDAO->findByOrderCode($orderCode);
+
+        if ($result['isValid'] && $result['isSuccess'] && $order) {
+            // Thanh toán thành công → cập nhật trạng thái đơn hàng sang "Đang xử lý" (1)
+            $this->orderDAO->updatePaymentStatus($orderCode, 1);
+            $paymentSuccess = true;
+        } else {
+            $paymentSuccess = false;
+        }
+
+        $pageTitle = $paymentSuccess ? "Thanh toán thành công" : "Thanh toán thất bại";
+        $pendingOrder = $_SESSION["pending_vnpay_order"] ?? null;
+        unset($_SESSION["pending_vnpay_order"]);
+
+        require __DIR__ . "/../../views/client/cart/vnpay_return.php";
     }
 }

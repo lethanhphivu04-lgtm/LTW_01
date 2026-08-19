@@ -1,0 +1,4 @@
+{
+    "animeCompanion.chat.provider": "gemini",
+    "animeCompanion.chat.model": "gemini-3.6-flash"
+}

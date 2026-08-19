@@ -95,10 +95,38 @@
                                 <label class="form-label">Ghi chú</label>
                                 <textarea name="note" class="form-control" rows="2" placeholder="Ghi chú đơn hàng (nếu có)"></textarea>
                             </div>
-                            <button type="submit" class="btn btn-success w-100 fw-bold py-2">
-                                ĐẶT HÀNG
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Phương thức thanh toán</label>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="pm_cod" value="cod" checked onchange="togglePaymentBtn()">
+                                    <label class="form-check-label" for="pm_cod">
+                                        <i class="bi bi-cash-coin me-1"></i> Thanh toán khi nhận hàng (COD)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="pm_vnpay" value="vnpay" onchange="togglePaymentBtn()">
+                                    <label class="form-check-label" for="pm_vnpay">
+                                        <i class="bi bi-credit-card me-1"></i> Thanh toán qua VNPay
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="submit" id="btn-checkout" class="btn btn-success w-100 fw-bold py-2">
+                                ĐẶT HÀNG (COD)
                             </button>
                         </form>
+                        <script>
+                        function togglePaymentBtn() {
+                            const btn = document.getElementById('btn-checkout');
+                            const isVnpay = document.getElementById('pm_vnpay').checked;
+                            if (isVnpay) {
+                                btn.textContent = 'THANH TOÁN QUA VNPAY';
+                                btn.className = 'btn btn-primary w-100 fw-bold py-2';
+                            } else {
+                                btn.textContent = 'ĐẶT HÀNG (COD)';
+                                btn.className = 'btn btn-success w-100 fw-bold py-2';
+                            }
+                        }
+                        </script>
                     </div>
                 </div>
             </div>

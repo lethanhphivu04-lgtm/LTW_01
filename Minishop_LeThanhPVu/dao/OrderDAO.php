@@ -14,7 +14,8 @@ class OrderDAO extends BaseDAO
             $row["order_code"],
             (float)$row["total_amount"],
             $row["note"],
-            (int)$row["status"]
+            (int)$row["status"],
+            $row["payment_method"] ?? 'cod'
         );
         $o->id = (int)$row["id"];
         $o->createdAt = $row["created_at"] ?? '';
@@ -26,7 +27,7 @@ class OrderDAO extends BaseDAO
     {
         $list = [];
         try {
-            $sql = "SELECT id, customer_id, user_id, order_code, total_amount, note, status, created_at, updated_at FROM orders ORDER BY id DESC";
+            $sql = "SELECT id, customer_id, user_id, order_code, total_amount, note, status, payment_method, created_at, updated_at FROM orders ORDER BY id DESC";
             $result = $this->executeQuery($sql);
             if ($result) {
                 while ($row = $result->fetch_assoc()) {
@@ -42,7 +43,7 @@ class OrderDAO extends BaseDAO
     public function findById(int $id): ?Order
     {
         try {
-            $sql = "SELECT id, customer_id, user_id, order_code, total_amount, note, status, created_at, updated_at FROM orders WHERE id = ?";
+            $sql = "SELECT id, customer_id, user_id, order_code, total_amount, note, status, payment_method, created_at, updated_at FROM orders WHERE id = ?";
             $stmt = $this->prepare($sql);
             $stmt->bind_param("i", $id);
             $stmt->execute();
@@ -59,16 +60,17 @@ class OrderDAO extends BaseDAO
     public function insert(Order $o): bool
     {
         try {
-            $sql = "INSERT INTO orders(customer_id, user_id, order_code, total_amount, note, status) VALUES (?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO orders(customer_id, user_id, order_code, total_amount, note, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt = $this->prepare($sql);
             $stmt->bind_param(
-                "iisdsi",
+                "iisdsis",
                 $o->customerId,
                 $o->userId,
                 $o->orderCode,
                 $o->totalAmount,
                 $o->note,
-                $o->status
+                $o->status,
+                $o->paymentMethod
             );
             return $stmt->execute();
         } catch (\Exception $e) {
@@ -79,16 +81,17 @@ class OrderDAO extends BaseDAO
     public function update(Order $o): bool
     {
         try {
-            $sql = "UPDATE orders SET customer_id=?, user_id=?, order_code=?, total_amount=?, note=?, status=? WHERE id=?";
+            $sql = "UPDATE orders SET customer_id=?, user_id=?, order_code=?, total_amount=?, note=?, status=?, payment_method=? WHERE id=?";
             $stmt = $this->prepare($sql);
             $stmt->bind_param(
-                "iisdsii",
+                "iisdsisi",
                 $o->customerId,
                 $o->userId,
                 $o->orderCode,
                 $o->totalAmount,
                 $o->note,
                 $o->status,
+                $o->paymentMethod,
                 $o->id
             );
             return $stmt->execute();
@@ -320,16 +323,17 @@ class OrderDAO extends BaseDAO
     {
         $this->conn->begin_transaction();
         try {
-            $sqlOrder = "INSERT INTO orders(customer_id, user_id, order_code, total_amount, note, status) VALUES (?, ?, ?, ?, ?, ?)";
+            $sqlOrder = "INSERT INTO orders(customer_id, user_id, order_code, total_amount, note, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmtOrder = $this->prepare($sqlOrder);
             $stmtOrder->bind_param(
-                "iisdsi",
+                "iisdsis",
                 $order->customerId,
                 $order->userId,
                 $order->orderCode,
                 $order->totalAmount,
                 $order->note,
-                $order->status
+                $order->status,
+                $order->paymentMethod
             );
             if (!$stmtOrder->execute()) {
                 throw new \Exception("Không thể tạo đơn hàng: " . $stmtOrder->error);
@@ -375,5 +379,38 @@ class OrderDAO extends BaseDAO
             throw $e;
         }
     }
-}
 
+    /**
+     * Tìm đơn hàng theo mã đơn hàng (dùng cho VNPay callback)
+     */
+    public function findByOrderCode(string $orderCode): ?array
+    {
+        try {
+            $sql = "SELECT o.*, c.fullname AS customer_name, c.phone AS customer_phone, c.address AS customer_address
+                    FROM orders o
+                    LEFT JOIN customers c ON o.customer_id = c.id
+                    WHERE o.order_code = ?";
+            $stmt = $this->prepare($sql);
+            $stmt->bind_param("s", $orderCode);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                return $row;
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
+        return null;
+    }
+
+    /**
+     * Cập nhật trạng thái đơn hàng sau khi thanh toán VNPay
+     */
+    public function updatePaymentStatus(string $orderCode, int $status): bool
+    {
+        $sql = "UPDATE orders SET status=? WHERE order_code=?";
+        $stmt = $this->prepare($sql);
+        $stmt->bind_param("is", $status, $orderCode);
+        return $stmt->execute();
+    }
+}
