@@ -14,7 +14,7 @@
     --bg-subtle: #f1f5f9;
     --bg-dark: #0f172a;
     --bg-darker: #090d16;
-    
+
     /* Tone màu Bạc & Xám kim loại (Silver & Slate) */
     --silver-100: #f8fafc;
     --silver-200: #e2e8f0;
@@ -25,16 +25,16 @@
     --silver-700: #334155;
     --silver-800: #1e293b;
     --silver-900: #0f172a;
-    
+
     /* Màu chữ hiển thị */
     --text-primary: #0f172a;
     --text-secondary: #64748b;
     --text-muted: #94a3b8;
-    
+
     /* Màu điểm nhấn (Khuyến mãi & Nút chính) */
     --accent-red: #ef4444;
     --accent-dark: #18181b;
-    
+
     /* Font chữ mặc định */
     --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }

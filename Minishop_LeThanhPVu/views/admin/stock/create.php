@@ -16,7 +16,7 @@ ob_start();
             <?php unset($_SESSION["error"]); ?>
         <?php endif; ?>
 
-        <form method="POST" action="<?= $baseUrl ?>/index.php?area=admin&controller=stock&action=create">
+        <form method="POST" action="index.php?area=admin&controller=stock&action=create">
             <div class="mb-3">
                 <label class="form-label fw-semibold">Chọn sản phẩm nhập kho <span class="text-danger">*</span></label>
                 <select name="product_id" id="productSelect" class="form-select border-primary" required>
@@ -55,7 +55,7 @@ ob_start();
             </div>
 
             <div class="d-flex gap-2 justify-content-end">
-                <a href="<?= $baseUrl ?>/index.php?area=admin&controller=stock&action=index" class="btn btn-secondary">Hủy bỏ</a>
+                <a href="index.php?area=admin&controller=stock&action=index" class="btn btn-secondary">Hủy bỏ</a>
                 <button type="submit" class="btn btn-success px-4 fw-bold">
                     <i class="bi bi-check2-circle me-1"></i> Xác nhận nhập kho
                 </button>
@@ -68,7 +68,7 @@ ob_start();
 document.getElementById('productSelect')?.addEventListener('change', function() {
     const selected = this.options[this.selectedIndex];
     const price = selected.getAttribute('data-price');
-    // Gợi ý giá vốn ước tính = 70% giá niêm yết
+    // Gợi ý giá vốn ước tính = 75% giá niêm yết
     if (price && !document.getElementById('importPriceInput').value) {
         document.getElementById('importPriceInput').value = Math.round(price * 0.75);
     }

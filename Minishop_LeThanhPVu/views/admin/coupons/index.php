@@ -5,7 +5,7 @@ ob_start();
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold text-dark mb-0"><i class="bi bi-ticket-perforated me-2"></i>Quản lý Mã giảm giá (Coupons)</h3>
-    <a href="<?= $baseUrl ?>/index.php?area=admin&controller=coupon&action=create" class="btn btn-primary fw-bold">
+    <a href="index.php?area=admin&controller=coupon&action=create" class="btn btn-primary fw-bold">
         <i class="bi bi-plus-lg me-1"></i> Thêm mã mới
     </a>
 </div>
@@ -58,8 +58,8 @@ ob_start();
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
-                                    <a href="<?= $baseUrl ?>/index.php?area=admin&controller=coupon&action=edit&id=<?= $c->id ?>" class="btn btn-warning btn-sm" title="Sửa"><i class="bi bi-pencil"></i></a>
-                                    <a href="<?= $baseUrl ?>/index.php?area=admin&controller=coupon&action=delete&id=<?= $c->id ?>" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa mã này?');" title="Xóa"><i class="bi bi-trash"></i></a>
+                                    <a href="index.php?area=admin&controller=coupon&action=edit&id=<?= $c->id ?>" class="btn btn-warning btn-sm" title="Sửa"><i class="bi bi-pencil"></i></a>
+                                    <a href="index.php?area=admin&controller=coupon&action=delete&id=<?= $c->id ?>" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa mã này?');" title="Xóa"><i class="bi bi-trash"></i></a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

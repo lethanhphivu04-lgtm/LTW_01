@@ -13,7 +13,7 @@ ob_start();
             <?php unset($_SESSION["error"]); ?>
         <?php endif; ?>
 
-        <form method="POST" action="<?= $baseUrl ?>/index.php?area=admin&controller=banner&action=edit&id=<?= $banner->id ?>" enctype="multipart/form-data">
+        <form method="POST" action="index.php?area=admin&controller=banner&action=edit&id=<?= $banner->id ?>" enctype="multipart/form-data">
             <div class="mb-3">
                 <label class="form-label fw-semibold">Nhãn Badge <span class="text-danger">*</span></label>
                 <input type="text" name="badge_text" class="form-control" required value="<?= htmlspecialchars($banner->badgeText) ?>">
@@ -33,7 +33,7 @@ ob_start();
                 <label class="form-label fw-semibold">Hình ảnh Banner</label>
                 <?php if (!empty($banner->image) && file_exists(__DIR__ . "/../../../uploads/banners/" . $banner->image)): ?>
                     <div class="mb-2 p-2 border rounded bg-light d-flex align-items-center gap-3">
-                        <img src="<?= $baseUrl ?>/uploads/banners/<?= htmlspecialchars($banner->image) ?>" alt="Banner Image" style="height: 60px; max-width: 150px; object-fit: contain;">
+                        <img src="uploads/banners/<?= htmlspecialchars($banner->image) ?>" alt="Banner Image" style="height: 60px; max-width: 150px; object-fit: contain;">
                         <span class="small text-muted">Ảnh hiện tại: <code><?= htmlspecialchars($banner->image) ?></code></span>
                     </div>
                 <?php endif; ?>
@@ -61,7 +61,7 @@ ob_start();
             </div>
 
             <div class="d-flex gap-2 justify-content-end mt-4">
-                <a href="<?= $baseUrl ?>/index.php?area=admin&controller=banner&action=index" class="btn btn-secondary">Hủy bỏ</a>
+                <a href="index.php?area=admin&controller=banner&action=index" class="btn btn-secondary">Hủy bỏ</a>
                 <button type="submit" class="btn btn-primary px-4 fw-bold">Cập nhật</button>
             </div>
         </form>

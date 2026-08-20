@@ -83,7 +83,6 @@ function initFlashSaleCountdown() {
         }
     }
 
-    // Chạy ngay lần đầu và đặt hẹn giờ chạy lại mỗi 1000ms (1 giây)
     updateCountdown();
     setInterval(updateCountdown, 1000);
 }

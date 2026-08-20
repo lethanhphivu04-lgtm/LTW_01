@@ -1,6 +1,7 @@
 # Agent files
 .agents/
 AGENTS.md
+.vscode 
 
 # Lab PDF files
 *.pdf

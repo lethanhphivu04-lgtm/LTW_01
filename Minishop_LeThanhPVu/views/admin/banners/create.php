@@ -13,7 +13,7 @@ ob_start();
             <?php unset($_SESSION["error"]); ?>
         <?php endif; ?>
 
-        <form method="POST" action="<?= $baseUrl ?>/index.php?area=admin&controller=banner&action=create" enctype="multipart/form-data">
+        <form method="POST" action="index.php?area=admin&controller=banner&action=create" enctype="multipart/form-data">
             <div class="mb-3">
                 <label class="form-label fw-semibold">Nhãn Badge <span class="text-danger">*</span></label>
                 <input type="text" name="badge_text" class="form-control" required placeholder="VD: 🔥 Siêu khuyến mãi, ⚡ Khám phá ngay">
@@ -55,7 +55,7 @@ ob_start();
             </div>
 
             <div class="d-flex gap-2 justify-content-end mt-4">
-                <a href="<?= $baseUrl ?>/index.php?area=admin&controller=banner&action=index" class="btn btn-secondary">Hủy bỏ</a>
+                <a href="index.php?area=admin&controller=banner&action=index" class="btn btn-secondary">Hủy bỏ</a>
                 <button type="submit" class="btn btn-primary px-4 fw-bold">Lưu Banner</button>
             </div>
         </form>

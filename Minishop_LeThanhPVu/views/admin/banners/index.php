@@ -5,7 +5,7 @@ ob_start();
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold text-dark mb-0"><i class="bi bi-images me-2"></i>Quản lý Banner Slider Trang Chủ</h3>
-    <a href="<?= $baseUrl ?>/index.php?area=admin&controller=banner&action=create" class="btn btn-primary fw-bold">
+    <a href="index.php?area=admin&controller=banner&action=create" class="btn btn-primary fw-bold">
         <i class="bi bi-plus-lg me-1"></i> Thêm banner mới
     </a>
 </div>
@@ -44,7 +44,7 @@ ob_start();
                                 <td class="text-center fw-bold"><?= $b->id ?></td>
                                 <td>
                                     <?php if (!empty($b->image) && file_exists(__DIR__ . "/../../../uploads/banners/" . $b->image)): ?>
-                                        <img src="<?= $baseUrl ?>/uploads/banners/<?= htmlspecialchars($b->image) ?>" alt="Banner" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                        <img src="uploads/banners/<?= htmlspecialchars($b->image) ?>" alt="Banner" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;">
                                     <?php else: ?>
                                         <div class="bg-light text-secondary d-flex align-items-center justify-content-center" style="width:60px; height:40px; border-radius:4px;">
                                             <i class="bi bi-image"></i>
@@ -64,10 +64,10 @@ ob_start();
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
-                                    <a href="<?= $baseUrl ?>/index.php?area=admin&controller=banner&action=edit&id=<?= $b->id ?>" class="btn btn-warning btn-sm me-1" title="Chỉnh sửa">
+                                    <a href="index.php?area=admin&controller=banner&action=edit&id=<?= $b->id ?>" class="btn btn-warning btn-sm me-1" title="Chỉnh sửa">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
-                                    <a href="<?= $baseUrl ?>/index.php?area=admin&controller=banner&action=delete&id=<?= $b->id ?>" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa banner này?');" title="Xóa">
+                                    <a href="index.php?area=admin&controller=banner&action=delete&id=<?= $b->id ?>" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa banner này?');" title="Xóa">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </td>
