@@ -5,6 +5,7 @@ use Models\Customer;
 
 class CustomerDAO extends BaseDAO
 {
+    // Chuyển đổi dữ liệu từ MySQL row sang Object Customer
     private function mapRow(array $row): Customer
     {
         $c = new Customer(
@@ -21,99 +22,94 @@ class CustomerDAO extends BaseDAO
         return $c;
     }
 
+    // Lấy tất cả khách hàng
     public function getAll(): array
     {
         $list = [];
-        try {
-            $sql = "SELECT id, fullname, phone, email, address, note, status, created_at, updated_at FROM customers ORDER BY id DESC";
-            $result = $this->executeQuery($sql);
-            if ($result) {
-                while ($row = $result->fetch_assoc()) {
-                    $list[] = $this->mapRow($row);
-                }
+        $sql = "SELECT id, fullname, phone, email, address, note, status, created_at, updated_at 
+                FROM customers 
+                ORDER BY id DESC";
+        $result = $this->executeQuery($sql);
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $list[] = $this->mapRow($row);
             }
-        } catch (\Exception $e) {
-            throw $e;
         }
         return $list;
     }
 
+    // Tìm khách hàng theo ID
     public function findById(int $id): ?Customer
     {
-        try {
-            $sql = "SELECT id, fullname, phone, email, address, note, status, created_at, updated_at FROM customers WHERE id = ?";
-            $stmt = $this->prepare($sql);
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            if ($row = $result->fetch_assoc()) {
-                return $this->mapRow($row);
-            }
-        } catch (\Exception $e) {
-            throw $e;
+        $sql = "SELECT id, fullname, phone, email, address, note, status, created_at, updated_at 
+                FROM customers 
+                WHERE id = ?";
+        $stmt = $this->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            return $this->mapRow($row);
         }
         return null;
     }
 
+    // Thêm mới khách hàng
     public function insert(Customer $c): bool
     {
-        try {
-            $sql = "INSERT INTO customers(fullname, phone, email, address, note, status) VALUES (?, ?, ?, ?, ?, ?)";
-            $stmt = $this->prepare($sql);
-            $stmt->bind_param(
-                "sssssi",
-                $c->fullname,
-                $c->phone,
-                $c->email,
-                $c->address,
-                $c->note,
-                $c->status
-            );
-            return $stmt->execute();
-        } catch (\Exception $e) {
-            throw $e;
-        }
+        $sql = "INSERT INTO customers(fullname, phone, email, address, note, status) 
+                VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = $this->prepare($sql);
+        $stmt->bind_param(
+            "sssssi",
+            $c->fullname,
+            $c->phone,
+            $c->email,
+            $c->address,
+            $c->note,
+            $c->status
+        );
+        return $stmt->execute();
     }
 
+    // Cập nhật thông tin khách hàng
     public function update(Customer $c): bool
     {
-        try {
-            $sql = "UPDATE customers SET fullname=?, phone=?, email=?, address=?, note=?, status=? WHERE id=?";
-            $stmt = $this->prepare($sql);
-            $stmt->bind_param(
-                "sssssii",
-                $c->fullname,
-                $c->phone,
-                $c->email,
-                $c->address,
-                $c->note,
-                $c->status,
-                $c->id
-            );
-            return $stmt->execute();
-        } catch (\Exception $e) {
-            throw $e;
-        }
+        $sql = "UPDATE customers 
+                SET fullname=?, phone=?, email=?, address=?, note=?, status=? 
+                WHERE id=?";
+        $stmt = $this->prepare($sql);
+        $stmt->bind_param(
+            "sssssii",
+            $c->fullname,
+            $c->phone,
+            $c->email,
+            $c->address,
+            $c->note,
+            $c->status,
+            $c->id
+        );
+        return $stmt->execute();
     }
 
+    // Xóa khách hàng
     public function delete(int $id): bool
     {
-        try {
-            $sql = "DELETE FROM customers WHERE id=?";
-            $stmt = $this->prepare($sql);
-            $stmt->bind_param("i", $id);
-            return $stmt->execute();
-        } catch (\Exception $e) {
-            throw $e;
-        }
+        $sql = "DELETE FROM customers WHERE id = ?";
+        $stmt = $this->prepare($sql);
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
     }
 
+    // Đếm tổng số khách hàng (hỗ trợ tìm kiếm)
     public function count(string $table = "customers", string $column = "fullname", string $keyword = ""): int
     {
         if ($keyword === '') {
             return parent::count("customers");
         }
-        $sql = "SELECT COUNT(*) AS total FROM customers WHERE fullname LIKE ? OR phone LIKE ? OR email LIKE ?";
+        $sql = "SELECT COUNT(*) AS total 
+                FROM customers 
+                WHERE fullname LIKE ? OR phone LIKE ? OR email LIKE ?";
         $stmt = $this->prepare($sql);
         $kw = "%$keyword%";
         $stmt->bind_param("sss", $kw, $kw, $kw);
@@ -122,36 +118,45 @@ class CustomerDAO extends BaseDAO
         return (int)($row['total'] ?? 0);
     }
 
+    // Lấy danh sách khách hàng có phân trang và sắp xếp cho Admin
     public function getPage(int $limit, int $offset, string $keyword = '', string $sort = ''): array
     {
         $list = [];
-        try {
-            $sql = "SELECT id, fullname, phone, email, address, note, status, created_at, updated_at FROM customers";
-            if ($keyword !== '') {
-                $sql .= " WHERE fullname LIKE ? OR phone LIKE ? OR email LIKE ?";
-            }
-            switch ($sort) {
-                case 'name_asc': $sql .= " ORDER BY fullname ASC"; break;
-                case 'name_desc': $sql .= " ORDER BY fullname DESC"; break;
-                case 'id_asc': $sql .= " ORDER BY id ASC"; break;
-                default: $sql .= " ORDER BY id DESC"; break;
-            }
-            $sql .= " LIMIT ? OFFSET ?";
+        $sql = "SELECT id, fullname, phone, email, address, note, status, created_at, updated_at 
+                FROM customers";
+        
+        if ($keyword !== '') {
+            $sql .= " WHERE fullname LIKE ? OR phone LIKE ? OR email LIKE ?";
+        }
 
-            $stmt = $this->prepare($sql);
-            if ($keyword !== '') {
-                $kw = "%$keyword%";
-                $stmt->bind_param("sssii", $kw, $kw, $kw, $limit, $offset);
-            } else {
-                $stmt->bind_param("ii", $limit, $offset);
-            }
-            $stmt->execute();
-            $result = $stmt->get_result();
-            while ($row = $result->fetch_assoc()) {
-                $list[] = $this->mapRow($row);
-            }
-        } catch (\Exception $e) {
-            throw $e;
+        switch ($sort) {
+            case 'name_asc':
+                $sql .= " ORDER BY fullname ASC";
+                break;
+            case 'name_desc':
+                $sql .= " ORDER BY fullname DESC";
+                break;
+            case 'id_asc':
+                $sql .= " ORDER BY id ASC";
+                break;
+            default:
+                $sql .= " ORDER BY id DESC";
+                break;
+        }
+        $sql .= " LIMIT ? OFFSET ?";
+
+        $stmt = $this->prepare($sql);
+        if ($keyword !== '') {
+            $kw = "%$keyword%";
+            $stmt->bind_param("sssii", $kw, $kw, $kw, $limit, $offset);
+        } else {
+            $stmt->bind_param("ii", $limit, $offset);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $list[] = $this->mapRow($row);
         }
         return $list;
     }
@@ -161,44 +166,41 @@ class CustomerDAO extends BaseDAO
         return $this->count("customers");
     }
 
+    // Tìm khách hàng theo số điện thoại
     public function findByPhone(string $phone): ?Customer
     {
-        try {
-            $sql = "SELECT id, fullname, phone, email, address, note, status, created_at, updated_at FROM customers WHERE phone = ? LIMIT 1";
-            $stmt = $this->prepare($sql);
-            $stmt->bind_param("s", $phone);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            if ($row = $result->fetch_assoc()) {
-                return $this->mapRow($row);
-            }
-        } catch (\Exception $e) {
-            throw $e;
+        $sql = "SELECT id, fullname, phone, email, address, note, status, created_at, updated_at 
+                FROM customers 
+                WHERE phone = ? 
+                LIMIT 1";
+        $stmt = $this->prepare($sql);
+        $stmt->bind_param("s", $phone);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            return $this->mapRow($row);
         }
         return null;
     }
 
+    // Thêm khách hàng và trả về ID vừa tạo
     public function insertGetId(Customer $c): int
     {
-        try {
-            $sql = "INSERT INTO customers(fullname, phone, email, address, note, status) VALUES (?, ?, ?, ?, ?, ?)";
-            $stmt = $this->prepare($sql);
-            $stmt->bind_param(
-                "sssssi",
-                $c->fullname,
-                $c->phone,
-                $c->email,
-                $c->address,
-                $c->note,
-                $c->status
-            );
-            if ($stmt->execute()) {
-                return $this->conn->insert_id;
-            }
-        } catch (\Exception $e) {
-            throw $e;
+        $sql = "INSERT INTO customers(fullname, phone, email, address, note, status) 
+                VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = $this->prepare($sql);
+        $stmt->bind_param(
+            "sssssi",
+            $c->fullname,
+            $c->phone,
+            $c->email,
+            $c->address,
+            $c->note,
+            $c->status
+        );
+        if ($stmt->execute()) {
+            return (int)$this->conn->insert_id;
         }
         return 0;
     }
 }
-

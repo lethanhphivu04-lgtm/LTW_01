@@ -1,13 +1,21 @@
-/* MiniShop - Minimalist Silver & Black Theme */
+/* ==========================================================================
+   MINISHOP - GIAO DIỆN CLIENT CHUẨN MINIMALIST SILVER & BLACK
+   Tác giả: Lê Thanh Phi Vũ
+   ========================================================================== */
+
+/* 1. NẠP FONT CHỮ HIỆN ĐẠI TỪ GOOGLE FONTS */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
+/* 2. BẢNG MÀU CHỦ ĐẠO & BIẾN TOÀN CỤC (CSS VARIABLES) */
 :root {
+    /* Màu nền hệ thống */
     --bg-main: #f8fafc;
     --bg-surface: #ffffff;
     --bg-subtle: #f1f5f9;
     --bg-dark: #0f172a;
     --bg-darker: #090d16;
     
+    /* Tone màu Bạc & Xám kim loại (Silver & Slate) */
     --silver-100: #f8fafc;
     --silver-200: #e2e8f0;
     --silver-300: #cbd5e1;
@@ -18,16 +26,20 @@
     --silver-800: #1e293b;
     --silver-900: #0f172a;
     
+    /* Màu chữ hiển thị */
     --text-primary: #0f172a;
     --text-secondary: #64748b;
     --text-muted: #94a3b8;
     
+    /* Màu điểm nhấn (Khuyến mãi & Nút chính) */
     --accent-red: #ef4444;
     --accent-dark: #18181b;
     
+    /* Font chữ mặc định */
     --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
+/* 3. ĐỊNH DẠNG BODY TOÀN TRANG */
 body {
     font-family: var(--font-family);
     background-color: var(--bg-main);
@@ -35,7 +47,7 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* Navbar & Header */
+/* 4. THANH THÔNG TIN ĐẦU TRANG (TOP BAR) */
 .top-bar {
     background: #090d16;
     color: #94a3b8;
@@ -43,11 +55,13 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* 5. THANH ĐIỀU HƯỚNG CHÍNH (MAIN NAVBAR) */
 .main-navbar {
     background: #0f172a !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Logo thương hiệu */
 .navbar-brand {
     font-weight: 800;
     letter-spacing: -0.5px;
@@ -58,6 +72,7 @@ body {
     color: #94a3b8;
 }
 
+/* Các liên kết menu */
 .main-navbar .nav-link {
     color: #cbd5e1 !important;
     font-size: 0.925rem;
@@ -69,6 +84,7 @@ body {
     color: #ffffff !important;
 }
 
+/* Khung tìm kiếm sản phẩm trên Header */
 .header-search .form-control {
     background: #1e293b;
     border: 1px solid #334155;
@@ -94,6 +110,7 @@ body {
     background: #475569;
 }
 
+/* Nút Giỏ hàng trên thanh Menu */
 .btn-cart-nav {
     background: #1e293b;
     border: 1px solid #334155;
@@ -108,7 +125,7 @@ body {
     border-color: #64748b;
 }
 
-/* Hero Banner - Sleek Dark Metallic */
+/* 6. BANNER HERO TRANG CHỦ (HERO BANNER) */
 .hero-banner {
     background: linear-gradient(135deg, #090d16 0%, #1e293b 60%, #334155 100%);
     position: relative;
@@ -134,7 +151,7 @@ body {
     transform: translateY(-1px);
 }
 
-/* Section Title */
+/* 7. TIÊU ĐỀ CÁC KHU VỰC (SECTION TITLE) */
 .section-title {
     font-weight: 700;
     font-size: 1.25rem;
@@ -154,7 +171,7 @@ body {
     margin: 8px auto 0;
 }
 
-/* Category Card */
+/* 8. THẺ DANH MỤC SẢN PHẨM (CATEGORY CARD) */
 .category-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -177,7 +194,7 @@ body {
     color: #0f172a;
 }
 
-/* Product Card */
+/* 9. THẺ HIỂN THỊ SẢN PHẨM (PRODUCT CARD) */
 .product-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -192,6 +209,7 @@ body {
     box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.1);
 }
 
+/* Khung chứa ảnh sản phẩm */
 .product-img-wrapper {
     background: #f8fafc;
     height: 190px;
@@ -219,6 +237,7 @@ body {
     color: #94a3b8;
 }
 
+/* Huy hiệu giảm giá (%) */
 .badge-discount {
     background: #0f172a;
     color: #ffffff;
@@ -228,6 +247,7 @@ body {
     border-radius: 6px;
 }
 
+/* Tên sản phẩm (Cắt gọn tối đa 2 dòng) */
 .product-title {
     font-size: 0.95rem;
     font-weight: 600;
@@ -245,6 +265,7 @@ body {
     color: #334155;
 }
 
+/* Giá bán & Giá gốc */
 .price-current {
     font-size: 1.05rem;
     font-weight: 700;
@@ -257,7 +278,8 @@ body {
     text-decoration: line-through;
 }
 
-/* Action Buttons */
+/* 10. CÁC NÚT THAO TÁC (ACTION BUTTONS) */
+/* Nút Xem chi tiết */
 .btn-action-view {
     background: #f1f5f9;
     color: #0f172a;
@@ -274,6 +296,7 @@ body {
     color: #0f172a;
 }
 
+/* Nút Mua ngay / Thêm giỏ hàng */
 .btn-action-buy {
     background: #0f172a;
     color: #ffffff;
@@ -291,7 +314,7 @@ body {
     color: #ffffff;
 }
 
-/* Footer */
+/* 11. CHÂN TRANG (FOOTER) */
 .site-footer {
     background: #090d16;
     color: #94a3b8;
@@ -314,6 +337,7 @@ body {
     color: #ffffff;
 }
 
+/* Các nút biểu tượng mạng xã hội */
 .footer-social-btn {
     width: 36px;
     height: 36px;
@@ -332,7 +356,7 @@ body {
     color: #ffffff;
 }
 
-/* Cart Table Silver Styling */
+/* 12. BẢNG GIỎ HÀNG (CART TABLE) */
 .table-silver th {
     background-color: #0f172a !important;
     color: #ffffff !important;

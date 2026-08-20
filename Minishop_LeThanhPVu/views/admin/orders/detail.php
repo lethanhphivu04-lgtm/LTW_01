@@ -4,8 +4,13 @@ $id = $order['id'] ?? 0;
 ob_start();
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="fw-bold">CHI TIẾT ĐƠN HÀNG: <span class="text-primary">#<?= htmlspecialchars($order['order_code']) ?></span></h4>
-    <a href="index.php?area=admin&controller=order&action=index" class="btn btn-secondary btn-sm">Quay lại danh sách</a>
+    <h4 class="fw-bold mb-0">CHI TIẾT ĐƠN HÀNG: <span class="text-primary">#<?= htmlspecialchars($order['order_code']) ?></span></h4>
+    <div class="d-flex gap-2">
+        <a href="index.php?area=admin&controller=order&action=invoice&id=<?= $id ?>" target="_blank" class="btn btn-primary btn-sm">
+            <i class="bi bi-printer me-1"></i> In hóa đơn A4
+        </a>
+        <a href="index.php?area=admin&controller=order&action=index" class="btn btn-secondary btn-sm">Quay lại danh sách</a>
+    </div>
 </div>
 
 <div class="row g-3 mb-4">
@@ -17,6 +22,14 @@ ob_start();
                 <p><strong>Mã đơn hàng:</strong> <span class="text-primary fw-bold"><?= htmlspecialchars($order['order_code']) ?></span></p>
                 <p><strong>Ngày đặt:</strong> <?= $order['created_at'] ?></p>
                 <p><strong>Nhân viên xử lý:</strong> <?= htmlspecialchars($order['user_name'] ?? 'Chưa phân công') ?></p>
+                <p>
+                    <strong>Phương thức thanh toán:</strong>
+                    <?php if (strtolower($order['payment_method'] ?? 'cod') === 'vnpay'): ?>
+                        <span class="badge bg-primary text-white"><i class="bi bi-credit-card me-1"></i>VNPay (Thanh toán online)</span>
+                    <?php else: ?>
+                        <span class="badge bg-secondary text-white"><i class="bi bi-cash-stack me-1"></i>Thanh toán khi nhận hàng (COD)</span>
+                    <?php endif; ?>
+                </p>
                 <p><strong>Ghi chú đơn hàng:</strong> <?= htmlspecialchars($order['note'] ?? 'Không có') ?></p>
                 <p>
                     <strong>Trạng thái hiện tại:</strong>

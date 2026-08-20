@@ -30,7 +30,7 @@ ob_start();
             <td><?= $stt++ ?></td>
             <td>
                 <?php if (!empty($p['image'])) { ?>
-                    <img src="uploads/products/<?= $p['image'] ?>" alt="<?= htmlspecialchars($p['proname']) ?>" class="img-thumbnail" width="80">
+                    <img src="uploads/products/<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['proname']) ?>" class="img-thumbnail" width="80" onerror="this.onerror=null; this.src='https://via.placeholder.com/80?text=No+Image';">
                 <?php } else { ?>
                     <span class="text-muted">No Image</span>
                 <?php } ?>

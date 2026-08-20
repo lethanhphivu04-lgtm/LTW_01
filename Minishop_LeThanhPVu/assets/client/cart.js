@@ -1,12 +1,18 @@
 /**
- * MiniShop Cart JavaScript - Lab 13
- * AJAX Cart operations: Add, Update, Remove, Count & Toast Notifications
+ * ============================================================================
+ * MINISHOP - XỬ LÝ GIỎ HÀNG & YÊU THÍCH BẰNG AJAX (JAVASCRIPT THUẦN)
+ * Tác giả: Lê Thanh Phi Vũ
+ * Chức năng: Thêm vào giỏ, cập nhật số lượng, xóa hàng, thả tim yêu thích,
+ *            hiển thị thông báo Toast đẹp mắt mà không cần tải lại trang.
+ * ============================================================================
  */
 
+// 1. HÀM ĐỊNH DẠNG TIỀN TỆ VIỆT NAM ĐỒNG (VNĐ)
 function formatCurrency(amount) {
     return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
 }
 
+// 2. HIỂN THỊ THÔNG BÁO NỔI TOAST (POPUP GÓC PHẢI DƯỚI)
 function showCartToast(message, type = 'success') {
     let toastContainer = document.getElementById('toast-container');
     if (!toastContainer) {
@@ -45,6 +51,7 @@ function showCartToast(message, type = 'success') {
     }
 }
 
+// 3. CẬP NHẬT SỐ LƯỢNG HUY HIỆU GIỎ HÀNG TRÊN HEADER
 function updateCartBadge(count) {
     const badge = document.querySelector('#cartCount');
     if (badge) {
@@ -52,7 +59,7 @@ function updateCartBadge(count) {
     }
 }
 
-// Bắt sự kiện Thêm vào giỏ hàng
+// 4. BẮT SỰ KIỆN THÊM VÀO GIỎ HÀNG (AJAX FETCH)
 document.addEventListener('DOMContentLoaded', function () {
     document.body.addEventListener('click', function (e) {
         const button = e.target.closest('.btn-add-cart');
@@ -62,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const productId = button.dataset.productid;
         if (!productId) return;
 
-        // Kiểm tra xem có input số lượng không (trên trang chi tiết sản phẩm)
+        // Lấy số lượng từ ô input nếu đang ở trang chi tiết sản phẩm
         const qtyInput = document.getElementById('qty-input');
         const quantity = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
 
@@ -71,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
         formData.append('productid', productId);
         formData.append('quantity', quantity);
 
+        // Gửi request ngầm lên server
         fetch(baseUrl + '/cart/add', {
             method: 'POST',
             body: formData
@@ -91,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Cập nhật số lượng sản phẩm trong giỏ hàng
+// 5. CẬP NHẬT SỐ LƯỢNG TRONG TRANG GIỎ HÀNG (TĂNG / GIẢM SỐ LƯỢNG)
 function updateCart(productId, quantity) {
     const baseUrl = window.BASE_URL || '/LTW_01/Minishop_LeThanhPVu';
     const formData = new FormData();
@@ -121,12 +129,12 @@ function updateCart(productId, quantity) {
                 if (subtotalEl) subtotalEl.textContent = formatCurrency(data.subtotal);
             }
 
-            // Cập nhật tổng tiền
+            // Cập nhật lại tổng tiền giỏ hàng
             document.querySelectorAll('.cart-total-text').forEach(el => {
                 el.textContent = formatCurrency(data.cartTotal);
             });
 
-            // Nếu giỏ hết hàng
+            // Nếu giỏ trống, chuyển sang giao diện thông báo giỏ trống
             if (data.cartCount <= 0) {
                 const cartContent = document.getElementById('cart-content');
                 const cartEmpty = document.getElementById('cart-empty');
@@ -145,7 +153,7 @@ function updateCart(productId, quantity) {
     });
 }
 
-// Xóa sản phẩm khỏi giỏ hàng
+// 6. XÓA SẢN PHẨM KHỎI GIỎ HÀNG
 function removeCart(productId) {
     if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?')) {
         return;
@@ -188,3 +196,59 @@ function removeCart(productId) {
         showCartToast('Lỗi kết nối khi xóa sản phẩm.', 'error');
     });
 }
+
+// 7. XỬ LÝ NÚT THẢ TIM YÊU THÍCH (WISHLIST TOGGLE)
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-wishlist-toggle');
+    if (!btn) return;
+
+    e.preventDefault();
+    const productId = btn.getAttribute('data-product-id');
+    if (!productId) return;
+
+    const baseUrl = window.BASE_URL || '/LTW_01/Minishop_LeThanhPVu';
+    const formData = new FormData();
+    formData.append('product_id', productId);
+
+    fetch(baseUrl + '/index.php?area=client&controller=wishlist&action=toggle', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // Đổi màu và icon tim đỏ / xám
+            const icon = btn.querySelector('i');
+            if (data.is_wishlisted) {
+                if (icon) {
+                    icon.className = 'bi bi-heart-fill text-danger';
+                }
+                btn.style.color = '#e11d48';
+                btn.setAttribute('title', 'Bỏ thích');
+            } else {
+                if (icon) {
+                    icon.className = 'bi bi-heart';
+                }
+                btn.style.color = '#94a3b8';
+                btn.setAttribute('title', 'Yêu thích');
+                
+                // Nếu đang ở trang Wishlist thì tự xóa card sản phẩm
+                const col = document.getElementById('wishlist-col-' + productId);
+                if (col) col.remove();
+            }
+
+            // Cập nhật số lượng đếm trên Header
+            const badge = document.getElementById('wishlistCount');
+            if (badge) {
+                badge.textContent = data.count;
+            }
+
+            showCartToast(data.message, 'success');
+        } else {
+            showCartToast(data.message || 'Lỗi xử lý yêu thích', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Wishlist error:', err);
+    });
+});

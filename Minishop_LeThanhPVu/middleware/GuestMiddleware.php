@@ -1,6 +1,10 @@
 <?php
 namespace Middleware;
 
+/**
+ * Middleware dành cho Khách chưa đăng nhập
+ * (Nếu người dùng đã đăng nhập rồi thì không cho vào lại trang Login mà chuyển thẳng vào trang Quản trị).
+ */
 class GuestMiddleware
 {
     public static function handle()

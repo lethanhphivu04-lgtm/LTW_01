@@ -4,27 +4,33 @@ namespace Controllers\Admin;
 use DAO\UserDAO;
 use Middleware\CsrfMiddleware;
 
+/**
+ * Controller xử lý Đăng nhập & Đăng xuất hệ thống Quản trị (Admin Auth)
+ */
 class AuthController
 {
+    /**
+     * Xử lý Đăng nhập Admin
+     */
     public function login()
     {
         $errors = [];
         $username = "";
 
-        // Hiển thị form
+        // 1. Nếu là yêu cầu GET -> Hiển thị form đăng nhập
         if ($_SERVER["REQUEST_METHOD"] === "GET") {
             require __DIR__ . '/../../views/admin/login.php';
             return;
         }
 
-        // Kiểm tra CSRF
+        // 2. Kiểm tra mã bảo mật CSRF chống giả mạo request
         CsrfMiddleware::verify();
 
-        // Nhận dữ liệu
+        // 3. Nhận dữ liệu từ Form
         $username = trim($_POST["username"] ?? "");
         $password = $_POST["password"] ?? "";
 
-        // Validate
+        // 4. Kiểm tra hợp lệ dữ liệu nhập
         if ($username === "") {
             $errors['username'] = "Vui lòng nhập tên đăng nhập.";
         }
@@ -37,53 +43,58 @@ class AuthController
             return;
         }
 
-        // Tìm User
+        // 5. Tìm tài khoản trong Cơ sở dữ liệu
         $userDAO = new UserDAO();
         $user = $userDAO->findByUsername($username);
 
-        // Kiểm tra tài khoản và mật khẩu
         if (!$user) {
             $errors['username'] = "Tên đăng nhập không đúng.";
             require __DIR__ . '/../../views/admin/login.php';
             return;
         }
 
+        // 6. Kiểm tra mật khẩu (hỗ trợ cả hash bcrypt và text thuần cho môi trường lab)
         if (!password_verify($password, $user->password) && $password !== $user->password) {
             $errors['password'] = "Mật khẩu không đúng.";
             require __DIR__ . '/../../views/admin/login.php';
             return;
         }
 
+        // 7. Kiểm tra trạng thái tài khoản
         if ($user->status === 0) {
             $errors['username'] = "Tài khoản của bạn đã bị khóa.";
             require __DIR__ . '/../../views/admin/login.php';
             return;
         }
 
-        // Đăng nhập thành công
+        // 8. Đăng nhập thành công -> Lưu thông tin vào Session
         $_SESSION["user"] = $user;
 
-        if (!empty($_POST["remember"])) {
-            $rememberToken = base64_encode($user->username . ":" . md5($user->username . "MINISHOP_SECRET_KEY"));
-            setcookie("remember_user", $rememberToken, time() + 7 * 24 * 3600, "/");
+        // 9. Xử lý ghi nhớ đăng nhập (Remember Me) bằng Cookie mã hóa 30 ngày
+        if (isset($_POST["remember"])) {
+            $hash = md5($username . "MINISHOP_SECRET_KEY");
+            $cookieVal = base64_encode($username . ":" . $hash);
+            setcookie("remember_user", $cookieVal, time() + (86400 * 30), "/");
         } else {
-            setcookie("remember_user", "", time() - 3600, "/");
+            if (isset($_COOKIE["remember_user"])) {
+                setcookie("remember_user", "", time() - 3600, "/");
+            }
         }
 
-        header("Location: index.php?area=admin&controller=product&action=index");
+        // Chuyển hướng vào trang Dashboard quản trị
+        header("Location: index.php?area=admin&controller=dashboard&action=index");
         exit;
     }
 
-    // Đăng xuất
+    /**
+     * Xử lý Đăng xuất Admin & Xóa Session + Cookie
+     */
     public function logout()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        unset($_SESSION["user"]);
+        if (isset($_COOKIE["remember_user"])) {
+            setcookie("remember_user", "", time() - 3600, "/");
         }
-        session_unset();
-        session_destroy();
-        setcookie("remember_user", "", time() - 3600, "/");
-
         header("Location: index.php?area=admin&controller=auth&action=login");
         exit;
     }

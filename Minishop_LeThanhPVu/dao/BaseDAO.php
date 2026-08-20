@@ -3,19 +3,31 @@ namespace DAO;
 
 use Config\Database;
 
+/**
+ * Lớp DAO Cơ sở (Base Data Access Object) kế thừa kết nối Database
+ * Cung cấp các hàm dùng chung: thực thi câu lệnh SQL, chuẩn bị Statement và đếm tổng dòng.
+ */
 class BaseDAO extends Database
 {
-    // Thực thi câu lệnh SELECT
+    /**
+     * Thực thi câu lệnh SQL trực tiếp
+     */
     protected function executeQuery(string $sql): \mysqli_result|false
     {
         return $this->conn->query($sql);
     }
 
+    /**
+     * Chuẩn bị câu lệnh truy vấn có tham số (Prepared Statement chống SQL Injection)
+     */
     protected function prepare(string $sql): \mysqli_stmt|false
     {
         return $this->conn->prepare($sql);
     }
 
+    /**
+     * Đếm tổng số bản ghi trong bảng (hỗ trợ phân trang và tìm kiếm)
+     */
     public function count(string $table, string $column = "", string $keyword = ""): int
     {
         if ($keyword === "" || $column === "") {

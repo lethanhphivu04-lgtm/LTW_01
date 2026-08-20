@@ -3,8 +3,15 @@ namespace Middleware;
 
 use Models\User;
 
+/**
+ * Middleware phân quyền (Role-based Access Control - RBAC)
+ * Đảm bảo chỉ có tài khoản Quản trị viên cao nhất (Role = 1) mới được thực hiện tác vụ đặc biệt.
+ */
 class RoleMiddleware
 {
+    /**
+     * Bắt buộc quyền Quản trị viên (Admin), nếu là Nhân viên sẽ báo lỗi 403 Forbidden
+     */
     public static function requireAdmin()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -16,6 +23,7 @@ class RoleMiddleware
             $user = null;
         }
 
+        // Kiểm tra role: 1 = Admin, 0 = Nhân viên
         if (!$user || !isset($user->role) || (int)$user->role !== 1) {
             http_response_code(403);
             die("

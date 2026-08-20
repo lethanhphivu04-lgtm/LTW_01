@@ -50,7 +50,14 @@ class CustomerController
             $status = (int)($_POST['status'] ?? 1);
 
             if ($fullname === '') $errors[] = 'Họ tên không được để trống.';
-            if ($phone === '') $errors[] = 'Số điện thoại không được để trống.';
+            if ($phone === '') {
+                $errors[] = 'Số điện thoại không được để trống.';
+            } elseif (!preg_match('/^(0|\+84)[35789][0-9]{8}$/', $phone)) {
+                $errors[] = 'Số điện thoại không đúng định dạng VN (VD: 0901234567).';
+            }
+            if ($email !== '' && !preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+                $errors[] = 'Email không đúng định dạng.';
+            }
 
             if (empty($errors)) {
                 $c = new Customer(
@@ -91,7 +98,14 @@ class CustomerController
             $status = (int)($_POST['status'] ?? 1);
 
             if ($fullname === '') $errors[] = 'Họ tên không được để trống.';
-            if ($phone === '') $errors[] = 'Số điện thoại không được để trống.';
+            if ($phone === '') {
+                $errors[] = 'Số điện thoại không được để trống.';
+            } elseif (!preg_match('/^(0|\+84)[35789][0-9]{8}$/', $phone)) {
+                $errors[] = 'Số điện thoại không đúng định dạng VN (VD: 0901234567).';
+            }
+            if ($email !== '' && !preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+                $errors[] = 'Email không đúng định dạng.';
+            }
 
             if (empty($errors)) {
                 $customer->fullname = $fullname;

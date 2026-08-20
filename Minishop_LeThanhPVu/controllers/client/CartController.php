@@ -211,6 +211,81 @@ class CartController
         exit;
     }
 
+    public function apply_coupon()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $code = strtoupper(trim($_POST['coupon_code'] ?? ''));
+        if (empty($code)) {
+            echo json_encode(['success' => false, 'message' => 'Vui lòng nhập mã giảm giá.']);
+            exit;
+        }
+
+        $couponDAO = new \DAO\CouponDAO();
+        $coupon = $couponDAO->findByCode($code);
+        if (!$coupon) {
+            echo json_encode(['success' => false, 'message' => 'Mã giảm giá không tồn tại hoặc đã hết hiệu lực.']);
+            exit;
+        }
+
+        if (!empty($coupon->expiryDate) && strtotime($coupon->expiryDate) < strtotime(date('Y-m-d'))) {
+            echo json_encode(['success' => false, 'message' => 'Mã giảm giá đã hết hạn sử dụng.']);
+            exit;
+        }
+
+        $cartTotal = $this->getCartTotal();
+        if ($cartTotal < $coupon->minOrderValue) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Đơn hàng tối thiểu từ ' . number_format($coupon->minOrderValue, 0, ',', '.') . ' đ để dùng mã này.'
+            ]);
+            exit;
+        }
+
+        $discount = 0;
+        if ($coupon->discountType === 'percent') {
+            $discount = $cartTotal * ($coupon->discountValue / 100);
+            if ($coupon->maxDiscount !== null && $discount > $coupon->maxDiscount) {
+                $discount = $coupon->maxDiscount;
+            }
+        } else {
+            $discount = min($coupon->discountValue, $cartTotal);
+        }
+
+        $_SESSION['coupon'] = [
+            'code' => $coupon->code,
+            'discount_type' => $coupon->discountType,
+            'discount_value' => $coupon->discountValue,
+            'discount_amount' => $discount
+        ];
+
+        $finalTotal = max(0, $cartTotal - $discount);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Áp dụng mã giảm giá thành công!',
+            'coupon_code' => $coupon->code,
+            'discount_amount' => $discount,
+            'discount_formatted' => number_format($discount, 0, ',', '.') . ' đ',
+            'final_total' => $finalTotal,
+            'final_total_formatted' => number_format($finalTotal, 0, ',', '.') . ' đ'
+        ]);
+        exit;
+    }
+
+    public function remove_coupon()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        unset($_SESSION['coupon']);
+        $cartTotal = $this->getCartTotal();
+        echo json_encode([
+            'success' => true,
+            'message' => 'Đã hủy áp dụng mã giảm giá.',
+            'cart_total' => $cartTotal,
+            'cart_total_formatted' => number_format($cartTotal, 0, ',', '.') . ' đ'
+        ]);
+        exit;
+    }
+
     public function checkout()
     {
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -229,6 +304,20 @@ class CartController
 
             if (empty($fullname) || empty($phone) || empty($address)) {
                 $_SESSION["checkout_error"] = "Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ nhận hàng.";
+                header("Location: index.php?area=client&controller=cart&action=index");
+                exit;
+            }
+
+            // Regex kiểm tra số điện thoại Việt Nam (10 số, bắt đầu bằng 03, 05, 07, 08, 09)
+            if (!preg_match('/^(0|\+84)[35789][0-9]{8}$/', $phone)) {
+                $_SESSION["checkout_error"] = "Số điện thoại không đúng định dạng (VD: 0901234567).";
+                header("Location: index.php?area=client&controller=cart&action=index");
+                exit;
+            }
+
+            // Regex kiểm tra email nếu có nhập
+            if (!empty($email) && !preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+                $_SESSION["checkout_error"] = "Địa chỉ email không đúng định dạng.";
                 header("Location: index.php?area=client&controller=cart&action=index");
                 exit;
             }
@@ -263,9 +352,12 @@ class CartController
                     }
                 }
 
-                // 2. Tạo đơn hàng (Order)
+                // 2. Tính tiền và áp dụng mã giảm giá (nếu có)
                 $orderCode = "DH" . date("YmdHis") . rand(10, 99);
-                $totalAmount = $this->getCartTotal();
+                $cartTotal = $this->getCartTotal();
+                $couponCode = $_SESSION['coupon']['code'] ?? null;
+                $discountAmount = (float)($_SESSION['coupon']['discount_amount'] ?? 0);
+                $finalTotalAmount = max(0, $cartTotal - $discountAmount);
                 
                 $currentUser = $_SESSION["user"] ?? null;
                 $userId = null;
@@ -279,18 +371,21 @@ class CartController
                     $customerId,
                     $userId,
                     $orderCode,
-                    $totalAmount,
+                    $finalTotalAmount,
                     $note,
                     0, // 0: Chờ xử lý
-                    $paymentMethod
+                    $paymentMethod,
+                    $couponCode,
+                    $discountAmount
                 );
 
                 // 3. Thực thi Transaction lưu Order & OrderDetail
                 $orderId = $this->orderDAO->createOrderWithDetails($order, $cart);
 
                 if ($orderId > 0) {
-                    // Xóa giỏ hàng sau khi đặt thành công
+                    // Xóa giỏ hàng và coupon sau khi đặt thành công
                     unset($_SESSION["cart"]);
+                    unset($_SESSION["coupon"]);
 
                     // Nếu thanh toán VNPay → redirect sang cổng thanh toán
                     if ($paymentMethod === 'vnpay') {
@@ -300,23 +395,36 @@ class CartController
                             "fullname" => $fullname,
                             "phone" => $phone,
                             "address" => $address,
-                            "total" => $totalAmount
+                            "total" => $finalTotalAmount
                         ];
                         $ipAddr = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
                         $orderInfo = "Thanh toan don hang " . $orderCode;
-                        $paymentUrl = VNPayService::createPaymentUrl($orderCode, $totalAmount, $orderInfo, $ipAddr);
+                        $paymentUrl = VNPayService::createPaymentUrl($orderCode, $finalTotalAmount, $orderInfo, $ipAddr);
                         header("Location: " . $paymentUrl);
                         exit;
                     }
 
-                    // COD → hiển thị trang thành công
+                    // COD → Gửi email xác nhận (nếu có email) & hiển thị trang thành công
+                    if (!empty($email)) {
+                        \Services\EmailService::sendOrderConfirmation(
+                            $email,
+                            $fullname,
+                            $orderCode,
+                            $cart,
+                            $finalTotalAmount,
+                            $address,
+                            $phone,
+                            'cod'
+                        );
+                    }
+
                     $_SESSION["last_order"] = [
                         "id" => $orderId,
                         "code" => $orderCode,
                         "fullname" => $fullname,
                         "phone" => $phone,
                         "address" => $address,
-                        "total" => $totalAmount,
+                        "total" => $finalTotalAmount,
                         "count" => count($cart)
                     ];
                     header("Location: index.php?area=client&controller=cart&action=success");
@@ -385,6 +493,21 @@ class CartController
             // Thanh toán thành công → cập nhật trạng thái đơn hàng sang "Đang xử lý" (1)
             $this->orderDAO->updatePaymentStatus($orderCode, 1);
             $paymentSuccess = true;
+
+            // Gửi email xác nhận thanh toán thành công
+            if (!empty($order['customer_email'])) {
+                $orderDetails = $this->orderDAO->getOrderDetails((int)$order['id']);
+                \Services\EmailService::sendOrderConfirmation(
+                    $order['customer_email'],
+                    $order['customer_name'] ?? 'Quý khách',
+                    $orderCode,
+                    $orderDetails,
+                    (float)$order['total_amount'],
+                    $order['customer_address'] ?? '',
+                    $order['customer_phone'] ?? '',
+                    'vnpay'
+                );
+            }
         } else {
             $paymentSuccess = false;
         }
@@ -394,5 +517,18 @@ class CartController
         unset($_SESSION["pending_vnpay_order"]);
 
         require __DIR__ . "/../../views/client/cart/vnpay_return.php";
+    }
+
+    public function invoice()
+    {
+        $code = trim($_GET['code'] ?? '');
+        $order = $this->orderDAO->findByOrderCode($code);
+        if (!$order) {
+            header("Location: index.php?area=client&controller=cart&action=tracking");
+            exit;
+        }
+        $details = $this->orderDAO->getOrderDetails((int)$order['id']);
+        $pageTitle = "Hóa đơn bán hàng #" . htmlspecialchars($order['order_code']);
+        require __DIR__ . "/../../views/admin/orders/invoice.php";
     }
 }

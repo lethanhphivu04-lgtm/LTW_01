@@ -11,7 +11,11 @@ ob_start();
             <th>Hình ảnh chính</th>
             <td>
                 <?php if (!empty($product['image'])) { ?>
-                    <img src="uploads/products/<?= $product['image'] ?>" alt="<?= htmlspecialchars($product['proname']) ?>" class="img-thumbnail" width="200">
+                    <img src="uploads/products/<?= htmlspecialchars($product['image']) ?>" 
+                         alt="<?= htmlspecialchars($product['proname']) ?>" 
+                         class="img-thumbnail" 
+                         width="200"
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/200?text=No+Image';">
                 <?php } else { ?>
                     <span class="text-muted">No Image</span>
                 <?php } ?>
@@ -22,7 +26,11 @@ ob_start();
             <td>
                 <div class="d-flex flex-wrap gap-2">
                     <?php foreach ($galleryImages as $gImg): ?>
-                        <img src="uploads/products/<?= $gImg['image'] ?>" class="img-thumbnail" width="120" style="height:120px; object-fit:cover;">
+                        <img src="uploads/products/<?= htmlspecialchars($gImg['image']) ?>" 
+                             class="img-thumbnail" 
+                             width="120" 
+                             style="height:120px; object-fit:cover;"
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/120?text=No+Image';">
                     <?php endforeach; ?>
                     <?php if (empty($galleryImages)): ?>
                         <span class="text-muted">Chưa có ảnh phụ</span>

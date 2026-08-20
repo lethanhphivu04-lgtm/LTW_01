@@ -53,6 +53,7 @@ class ProductController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = $this->extractAndValidate($_POST, $errors);
             $image = $this->handleUpload($_FILES['image'] ?? [], null, $errors);
+            $galleryFiles = $this->handleMultipleUpload($_FILES['gallery'] ?? [], $errors);
 
             if (empty($errors)) {
                 $p = new Product(
@@ -67,7 +68,12 @@ class ProductController
                     $data['description'],
                     $data['status']
                 );
-                $this->productDAO->insert($p);
+                $newId = $this->productDAO->insert($p);
+                if ($newId && is_numeric($newId)) {
+                    foreach ($galleryFiles as $gFile) {
+                        $this->productDAO->insertImage((int)$newId, $gFile);
+                    }
+                }
                 header("Location: index.php?area=admin&controller=product&action=index");
                 exit;
             }
@@ -88,11 +94,13 @@ class ProductController
         $pageTitle = "Chỉnh sửa sản phẩm";
         $categories = $this->categoryDAO->getAll();
         $brands = $this->brandDAO->getAll();
+        $galleryImages = $this->productDAO->getImagesByProductId($id);
         $errors = [];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = $this->extractAndValidate($_POST, $errors);
             $image = $this->handleUpload($_FILES['image'] ?? [], $product->image, $errors) ?? $product->image;
+            $galleryFiles = $this->handleMultipleUpload($_FILES['gallery'] ?? [], $errors);
 
             if (empty($errors)) {
                 $product->categoryId = $data['category_id'];
@@ -107,12 +115,33 @@ class ProductController
                 $product->status = $data['status'];
 
                 $this->productDAO->update($product);
-                header("Location: index.php?area=admin&controller=product&action=index");
+
+                // Lưu các ảnh phụ mới
+                foreach ($galleryFiles as $gFile) {
+                    $this->productDAO->insertImage($id, $gFile);
+                }
+
+                header("Location: index.php?area=admin&controller=product&action=edit&id=" . $id . "&success=1");
                 exit;
             }
         }
 
         require __DIR__ . "/../../views/admin/products/edit.php";
+    }
+
+    public function deleteGalleryImage()
+    {
+        $imageId = (int)($_GET['image_id'] ?? 0);
+        $productId = (int)($_GET['product_id'] ?? 0);
+        if ($imageId > 0) {
+            $this->productDAO->deleteImage($imageId);
+        }
+        if ($productId > 0) {
+            header("Location: index.php?area=admin&controller=product&action=edit&id=" . $productId);
+        } else {
+            header("Location: index.php?area=admin&controller=product&action=index");
+        }
+        exit;
     }
 
     public function detail()
@@ -215,5 +244,56 @@ class ProductController
 
         $errors[] = 'Lỗi khi lưu file ảnh.';
         return null;
+    }
+
+    private function handleMultipleUpload(array $files, array &$errors): array
+    {
+        $uploaded = [];
+        if (empty($files['name']) || !is_array($files['name'])) {
+            return $uploaded;
+        }
+
+        $allowExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $uploadDir = __DIR__ . '/../../uploads/products/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $count = count($files['name']);
+        for ($i = 0; $i < $count; $i++) {
+            $name = $files['name'][$i] ?? '';
+            $error = $files['error'][$i] ?? UPLOAD_ERR_NO_FILE;
+            $tmpName = $files['tmp_name'][$i] ?? '';
+            $size = $files['size'][$i] ?? 0;
+
+            if ($error === UPLOAD_ERR_NO_FILE || empty($name)) {
+                continue;
+            }
+
+            if ($error !== UPLOAD_ERR_OK) {
+                $errors[] = "Lỗi khi tải lên file ảnh phụ: " . htmlspecialchars($name);
+                continue;
+            }
+
+            $extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            if (!in_array($extension, $allowExtensions)) {
+                $errors[] = "Ảnh phụ '$name' không đúng định dạng (cho phép JPG, JPEG, PNG, GIF, WEBP).";
+                continue;
+            }
+
+            if ($size > 2 * 1024 * 1024) {
+                $errors[] = "Ảnh phụ '$name' vượt quá kích thước 2 MB.";
+                continue;
+            }
+
+            $newFileName = time() . '_' . $i . '_' . uniqid() . '.' . $extension;
+            if (move_uploaded_file($tmpName, $uploadDir . $newFileName)) {
+                $uploaded[] = $newFileName;
+            } else {
+                $errors[] = "Không thể lưu file ảnh phụ: " . htmlspecialchars($name);
+            }
+        }
+
+        return $uploaded;
     }
 }

@@ -1,16 +1,19 @@
 <?php
 namespace Models;
 
+/**
+ * Model đại diện cho Thương hiệu (Brand) sản phẩm
+ */
 class Brand
 {
-    public int $id;
-    public string $name;
-    public string $slug;
-    public ?string $image;
-    public ?string $description;
-    public int $status;
-    public string $createdAt;
-    public string $updatedAt;
+    public int $id;                   // Mã định danh thương hiệu (Khóa chính)
+    public string $name;              // Tên thương hiệu (VD: Logitech, Razer, Sony, Dell, Asus...)
+    public string $slug;              // Chuỗi định danh URL chuẩn SEO (VD: logitech, razer...)
+    public ?string $image;            // Tên file ảnh logo thương hiệu
+    public ?string $description;      // Mô tả chi tiết về thương hiệu
+    public int $status;               // Trạng thái: 1 = Hiển thị, 0 = Ẩn
+    public string $createdAt;         // Thời gian tạo
+    public string $updatedAt;         // Thời gian cập nhật gần nhất
 
     public function __construct(
         string $name = "",

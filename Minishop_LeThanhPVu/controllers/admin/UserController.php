@@ -56,7 +56,14 @@ class UserController
             if ($fullname === '') $errors[] = 'Họ và tên không được để trống.';
             if ($username === '') $errors[] = 'Tên đăng nhập không được để trống.';
             if ($password === '') $errors[] = 'Mật khẩu không được để trống.';
-            if ($email === '') $errors[] = 'Email không được để trống.';
+            if ($email === '') {
+                $errors[] = 'Email không được để trống.';
+            } elseif (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+                $errors[] = 'Email không đúng định dạng.';
+            }
+            if ($phone !== '' && !preg_match('/^(0|\+84)[35789][0-9]{8}$/', $phone)) {
+                $errors[] = 'Số điện thoại không đúng định dạng VN (VD: 0901234567).';
+            }
 
             // Kiểm tra username đã tồn tại chưa
             if ($username !== '' && $this->userDAO->findByUsername($username)) {
@@ -108,7 +115,14 @@ class UserController
 
             if ($fullname === '') $errors[] = 'Họ và tên không được để trống.';
             if ($username === '') $errors[] = 'Tên đăng nhập không được để trống.';
-            if ($email === '') $errors[] = 'Email không được để trống.';
+            if ($email === '') {
+                $errors[] = 'Email không được để trống.';
+            } elseif (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+                $errors[] = 'Email không đúng định dạng.';
+            }
+            if ($phone !== '' && !preg_match('/^(0|\+84)[35789][0-9]{8}$/', $phone)) {
+                $errors[] = 'Số điện thoại không đúng định dạng VN (VD: 0901234567).';
+            }
 
             $existing = $this->userDAO->findByUsername($username);
             if ($existing && $existing->id !== $id) {

@@ -14,11 +14,13 @@ $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    // xem tren dt//
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle ?? 'MiniShop') ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="<?= $baseUrl ?>/assets/client/style.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= $baseUrl ?>/assets/client/chatbot.css?v=<?= time() ?>">
     <script>
         window.BASE_URL = '<?= $baseUrl ?>';
     </script>
@@ -80,15 +82,17 @@ $baseUrl = '/LTW_01/Minishop_LeThanhPVu';
             </form>
             <!-- Icons -->
             <div class="d-flex align-items-center gap-3">
-                <a href="<?= $baseUrl ?>/admin/login" class="text-secondary fs-5" title="Đăng nhập Quản trị"><i class="bi bi-person-circle"></i></a>
                 <?php
-                $headerCartCount = 0;
-                if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
-                    foreach ($_SESSION['cart'] as $cItem) {
-                        $headerCartCount += (int)($cItem['quantity'] ?? 0);
-                    }
-                }
+                $headerWishlistCount = count($_SESSION['wishlist'] ?? []);
+                $headerCartCount = !empty($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart'], 'quantity')) : 0;
                 ?>
+                <a href="<?= $baseUrl ?>/admin/login" class="btn btn-outline-secondary btn-sm text-white border-0" title="Đăng nhập Quản trị">
+                    <i class="bi bi-person-circle fs-5"></i>
+                </a>
+                <a href="<?= $baseUrl ?>/index.php?area=client&controller=wishlist&action=index" class="btn btn-outline-secondary btn-sm position-relative text-white border-0" title="Sản phẩm yêu thích">
+                    <i class="bi bi-heart-fill text-danger fs-5"></i>
+                    <span id="wishlistCount" class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size:10px;"><?= $headerWishlistCount ?></span>
+                </a>
                 <a href="<?= $baseUrl ?>/cart" class="btn-cart-nav position-relative text-decoration-none" title="Giỏ hàng">
                     <i class="bi bi-cart3 me-1"></i>Giỏ hàng
                     <span id="cartCount" class="badge rounded-pill bg-danger ms-1"><?= $headerCartCount ?></span>

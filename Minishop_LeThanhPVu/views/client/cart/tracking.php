@@ -50,9 +50,14 @@
         ?>
 
         <div class="card border rounded-3 shadow-sm overflow-hidden mb-4">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
                 <span class="fw-bold">Mã đơn hàng: #<?= htmlspecialchars($order['order_code']) ?></span>
-                <span class="badge <?= $st['class'] ?> px-3 py-2 fs-6"><?= $st['label'] ?></span>
+                <div class="d-flex gap-2 align-items-center">
+                    <a href="<?= $baseUrl ?>/index.php?area=client&controller=cart&action=invoice&code=<?= urlencode($order['order_code']) ?>" target="_blank" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-printer me-1"></i> In hóa đơn
+                    </a>
+                    <span class="badge <?= $st['class'] ?> px-3 py-2 fs-6"><?= $st['label'] ?></span>
+                </div>
             </div>
             <div class="card-body p-4">
                 <div class="row g-3 mb-4">
@@ -68,8 +73,16 @@
                         <p class="mb-1 text-secondary">Địa chỉ giao hàng:</p>
                         <h6 class="fw-bold text-dark mb-0"><?= htmlspecialchars($order['customer_address']) ?></h6>
                     </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-secondary">Phương thức thanh toán:</p>
+                        <?php if (strtolower($order['payment_method'] ?? 'cod') === 'vnpay'): ?>
+                            <span class="badge bg-primary text-white"><i class="bi bi-credit-card me-1"></i>VNPay (Đã thanh toán Online)</span>
+                        <?php else: ?>
+                            <span class="badge bg-secondary text-white"><i class="bi bi-cash-stack me-1"></i>Thanh toán khi nhận hàng (COD)</span>
+                        <?php endif; ?>
+                    </div>
                     <?php if (!empty($order['created_at'])): ?>
-                    <div class="col-md-12">
+                    <div class="col-md-6">
                         <p class="mb-1 text-secondary">Thời gian đặt hàng:</p>
                         <span class="small text-muted"><?= htmlspecialchars($order['created_at']) ?></span>
                     </div>

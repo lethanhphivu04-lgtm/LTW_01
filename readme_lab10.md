@@ -22,3 +22,8 @@
 * Authentication là xác thực bạn là ai (ví dụ nhập đúng pass để login),còn Authorization là phân quyền bạn được làm gì (ví dụ Admin có quyền xóa người dùng còn Nhân viên chỉ được xem).
 
 document.querySelector('input[name="csrf\_token"]').value = 'fake\_token\_123'( test csrf)
+
+Số thẻ: 9704198526191432198
+Tên chủ thẻ: NGUYEN VAN A
+Ngày phát hành: 07/15
+Mã OTP: 123456

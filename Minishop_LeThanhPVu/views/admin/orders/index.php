@@ -14,6 +14,7 @@ ob_start();
             <th>STT</th>
             <th>Mã đơn hàng</th>
             <th>Khách hàng</th>
+            <th>Phương thức</th>
             <th>Nhân viên xử lý</th>
             <th>Tổng tiền</th>
             <th>Ngày đặt</th>
@@ -27,6 +28,13 @@ ob_start();
             <td><?= $stt++ ?></td>
             <td class="fw-bold text-primary"><?= htmlspecialchars($o['order_code']) ?></td>
             <td class="fw-bold"><?= htmlspecialchars($o['customer_name'] ?? 'Khách lẻ') ?></td>
+            <td>
+                <?php if (strtolower($o['payment_method'] ?? 'cod') === 'vnpay'): ?>
+                    <span class="badge bg-primary text-white"><i class="bi bi-credit-card me-1"></i>VNPay</span>
+                <?php else: ?>
+                    <span class="badge bg-secondary text-white"><i class="bi bi-cash-stack me-1"></i>COD</span>
+                <?php endif; ?>
+            </td>
             <td><?= htmlspecialchars($o['user_name'] ?? 'Chưa phân công') ?></td>
             <td class="fw-bold text-success"><?= number_format($o['total_amount'], 0, ',', '.') ?> đ</td>
             <td><?= $o['created_at'] ?></td>
@@ -49,7 +57,7 @@ ob_start();
         </tr>
         <?php endforeach; ?>
         <?php if (empty($list)): ?>
-        <tr><td colspan="8" class="text-center text-muted">Không tìm thấy kết quả đơn hàng nào</td></tr>
+        <tr><td colspan="9" class="text-center text-muted">Không tìm thấy kết quả đơn hàng nào</td></tr>
         <?php endif; ?>
     </tbody>
 </table>

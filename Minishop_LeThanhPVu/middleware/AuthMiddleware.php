@@ -3,19 +3,26 @@ namespace Middleware;
 
 use DAO\UserDAO;
 
+/**
+ * Middleware kiểm tra trạng thái Đăng nhập vào trang Quản trị (Admin Authentication)
+ */
 class AuthMiddleware
 {
+    /**
+     * Chặn các yêu cầu chưa xác thực và chuyển hướng về trang đăng nhập
+     */
     public static function handle()
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
+        // Xóa Session rác nếu object bị lỗi do chưa load class
         if (isset($_SESSION["user"]) && ($_SESSION["user"] instanceof \__PHP_Incomplete_Class || !is_object($_SESSION["user"]))) {
             unset($_SESSION["user"]);
         }
 
-        // Tự động khôi phục Session từ Cookie "Remember Me"
+        // 1. Tự động khôi phục phiên đăng nhập từ Cookie "Ghi nhớ mật khẩu" (Remember Me)
         if (!isset($_SESSION["user"]) && !empty($_COOKIE["remember_user"])) {
             $parts = explode(":", base64_decode($_COOKIE["remember_user"]) ?? '');
             if (count($parts) === 2) {
@@ -31,6 +38,7 @@ class AuthMiddleware
             }
         }
 
+        // 2. Nếu vẫn chưa đăng nhập -> Chuyển hướng ngay về form Login
         if (!isset($_SESSION["user"])) {
             header("Location: index.php?area=admin&controller=auth&action=login");
             exit;

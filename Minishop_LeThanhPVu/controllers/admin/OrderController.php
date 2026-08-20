@@ -66,6 +66,20 @@ class OrderController
         require __DIR__ . "/../../views/admin/orders/detail.php";
     }
 
+    public function invoice()
+    {
+        $id = (int)($_GET['id'] ?? 0);
+        $order = $this->orderDAO->findByIdWithJoin($id);
+        if (!$order) {
+            header("Location: index.php?area=admin&controller=order&action=index");
+            exit;
+        }
+
+        $details = $this->orderDAO->getOrderDetails($id);
+        $pageTitle = "Hóa đơn bán hàng #" . htmlspecialchars($order['order_code']);
+        require __DIR__ . "/../../views/admin/orders/invoice.php";
+    }
+
     public function delete()
     {
         $id = (int)($_GET['id'] ?? 0);
